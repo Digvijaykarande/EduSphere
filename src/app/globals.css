@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "../../node_modules/tw-animate-css/dist/tw-animate.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 /* @import "shadcn/tailwind.css"; */
 
 @custom-variant dark (&:is(.dark *));
@@ -60,8 +62,6 @@ html {
   --sidebar-text: #8891a8;
   --sidebar-hover: #1c2740;
   --sidebar-active: #c99a3f;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);
@@ -85,6 +85,8 @@ html {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
 }
 
 body {
