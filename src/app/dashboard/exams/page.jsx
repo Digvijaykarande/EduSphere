@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import PageWrapper from "@/components/shared/PageWrapper";
-import GradebookTable from "@/features/exams/components/GradebookTable";
+import GradebookTable from "@/components/pages/dashboard/exams/components/GradebookTable";
 import { FileSpreadsheet, ClipboardList, TrendingUp, Award } from "lucide-react";
 
 export default function ExamsPage() {

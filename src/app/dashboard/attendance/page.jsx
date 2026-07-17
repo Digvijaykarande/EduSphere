@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import PageWrapper from "@/components/shared/PageWrapper";
-import AttendanceMarkingGrid from "@/features/attendance/components/AttendanceMarkingGrid";
+import AttendanceMarkingGrid from "@/components/pages/dashboard/attendance/components/AttendanceMarkingGrid";
 import { Calendar, Users, AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function AttendancePage() {
