@@ -45,23 +45,27 @@ html {
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
 
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: #64748b;
+  --secondary-foreground: #1e1b39;
 
-  --success: #3f7d5c;
-  --warning: #b8543f;
+  --success: #10b981;
+  --warning: #f59e0b;
   --destructive: oklch(0.577 0.245 27.325);
 
-  --gold: #c99a3f;
-  --gold-soft: #f3e6c8;
+  /* NOTE: kept as --gold/--gold-soft for backward compatibility with existing
+     className usage (text-gold, bg-gold-soft, etc). Values now point to the
+     indigo/violet accent instead of brass gold. Rename in a later pass once
+     components are touched. */
+  --gold: #6366f1;
+  --gold-soft: #eef0ff;
 
-  --sidebar-bg: #141b2d;
-  --sidebar-text: #8891a8;
-  --sidebar-hover: #1c2740;
-  --sidebar-active: #c99a3f;
+  --sidebar-bg: #14172b;
+  --sidebar-text: #9295b8;
+  --sidebar-hover: #1e2244;
+  --sidebar-active: #6d5ef8;
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);
@@ -85,8 +89,8 @@ html {
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: #f5f6fb;
+  --foreground: #1e1b39;
 }
 
 body {
@@ -116,7 +120,7 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--gold), #e3c777 60%, var(--gold));
+  background: linear-gradient(90deg, var(--primary), #8b7ffb 60%, var(--gold));
 }
 .report-card::after {
   content: "";
@@ -195,10 +199,13 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   background: var(--gold-soft);
-  color: #8a6a24;
-  border: 1px solid rgba(201,154,63,0.35);
+  color: #4f46e5;
+  border: 1px solid rgba(99,102,241,0.25);
 }
 
+button{
+  cursor: pointer;
+}
 .btn-pill-primary {
   display: inline-flex;
   align-items: center;
@@ -206,16 +213,16 @@ body {
   gap: 8px;
   padding: 12px 26px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, var(--primary), #4d6ae0);
+  background: linear-gradient(135deg, var(--primary), #6d5ef8);
   color: #fff;
   font-weight: 600;
   font-size: 0.9rem;
-  box-shadow: 0 8px 24px -8px rgba(52,84,209,0.55);
+  box-shadow: var(--dash-shadow-lg);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .btn-pill-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px -8px rgba(52,84,209,0.65);
+  box-shadow: 0 14px 32px -8px rgba(79, 70, 229, 0.4);
 }
 
 .btn-pill-outline {
@@ -234,6 +241,139 @@ body {
 .btn-pill-outline:hover {
   border-color: var(--gold);
   background: var(--gold-soft);
+}
+
+/* =========================================================
+   DASHBOARD MODULE — Indigo/Violet SaaS Theme
+   Scoped tokens + component classes for the admin dashboard.
+   Reference: purple/indigo sidebar SaaS dashboard mock.
+   ========================================================= */
+
+:root {
+  /* Stat card icon tones (4-card row: students / teachers / revenue / fees) */
+  --stat-violet-bg: #eef0ff;
+  --stat-violet-fg: #6366f1;
+  --stat-blue-bg: #e8f1ff;
+  --stat-blue-fg: #3b82f6;
+  --stat-green-bg: #e7f9f1;
+  --stat-green-fg: #10b981;
+  --stat-orange-bg: #fff3e6;
+  --stat-orange-fg: #f97316;
+
+  /* Event / announcement badge tones */
+  --badge-event-bg: #eef0ff;
+  --badge-event-fg: #5b52f3;
+  --badge-meeting-bg: #e8f1ff;
+  --badge-meeting-fg: #2f6fed;
+  --badge-awareness-bg: #e7f9f1;
+  --badge-awareness-fg: #0ea86c;
+
+  /* Donut / fee-collection chart slices */
+  --chart-collected: #10b981;
+  --chart-pending: #f5b942;
+  --chart-overdue: #94a3b8;
+
+  /* Line/area chart accent (attendance overview etc.) */
+  --chart-line: #7c6ff0;
+  --chart-line-fill-start: rgba(124, 111, 240, 0.28);
+  --chart-line-fill-end: rgba(124, 111, 240, 0);
+
+  /* Layout metrics */
+  --sidebar-width: 264px;
+  --topbar-height: 76px;
+  --dash-radius: 16px;
+  --dash-radius-sm: 10px;
+
+  /* Elevation */
+  --dash-shadow-sm: 0 1px 2px rgba(30, 27, 57, 0.04), 0 1px 3px rgba(30, 27, 57, 0.06);
+  --dash-shadow-md: 0 4px 10px rgba(30, 27, 57, 0.06), 0 2px 4px rgba(30, 27, 57, 0.04);
+  --dash-shadow-lg: 0 12px 28px -8px rgba(79, 70, 229, 0.18);
+
+  --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* ---- Sidebar navigation items ---- */
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--dash-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-nav-item:hover {
+  background: var(--sidebar-hover);
+  color: #fff;
+}
+.sidebar-nav-item-active {
+  background: linear-gradient(135deg, var(--sidebar-active), #8b7ffb);
+  color: #fff;
+  box-shadow: 0 6px 16px -4px rgba(109, 94, 248, 0.55);
+}
+
+/* ---- Dashboard surface card (stat cards, panels) ---- */
+.dashboard-card {
+  background: var(--card);
+  border-radius: var(--dash-radius);
+  border: 1px solid #ecebf7;
+  box-shadow: var(--dash-shadow-sm);
+}
+
+/* ---- Stat icon chip (top row of the dashboard) ---- */
+.stat-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  width: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.stat-icon-violet { background: var(--stat-violet-bg); color: var(--stat-violet-fg); }
+.stat-icon-blue   { background: var(--stat-blue-bg);   color: var(--stat-blue-fg); }
+.stat-icon-green  { background: var(--stat-green-bg);  color: var(--stat-green-fg); }
+.stat-icon-orange { background: var(--stat-orange-bg); color: var(--stat-orange-fg); }
+
+/* ---- Event/announcement pill badges ---- */
+.badge-tone {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-event     { background: var(--badge-event-bg);     color: var(--badge-event-fg); }
+.badge-meeting   { background: var(--badge-meeting-bg);   color: var(--badge-meeting-fg); }
+.badge-awareness { background: var(--badge-awareness-bg); color: var(--badge-awareness-fg); }
+
+/* ---- Focus ring, consistent across the dashboard ---- */
+.dash-focus:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---- Sidebar brand mark (logo box) ---- */
+.brand-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--sidebar-active));
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.5);
+}
+
+/* ---- Sidebar "Upgrade to Pro" card ---- */
+.upgrade-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--dash-radius);
+  background: linear-gradient(160deg, #2b2560, #443b8f 55%, #6d5ef8);
+  color: #fff;
 }
 
 @layer components {
@@ -259,7 +399,7 @@ body {
 
   /* Dotted Grid Background for CTA */
   .dot-grid {
-    background-image: radial-gradient(#3454d1 1px, transparent 1px);
+    background-image: radial-gradient(var(--primary) 1px, transparent 1px);
     background-size: 24px 24px;
     background-position: -12px -12px;
   }

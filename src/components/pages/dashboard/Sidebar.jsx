@@ -1,14 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSidebarStore } from "@/store/use-sidebar-store";
+import { useAuthStore } from "@/store/use-auth-store";
+import { useRouter } from "next/navigation";
 import {
-  LayoutDashboard, GraduationCap, CalendarCheck,
-  FileText, CreditCard, HelpCircle, Calendar,
-  ChevronLeft, ChevronRight
+  LayoutDashboard,
+  GraduationCap,
+  CalendarCheck,
+  FileText,
+  CreditCard,
+  HelpCircle,
+  Calendar,
+  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  BookOpen,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -21,75 +32,203 @@ const navItems = [
   { label: "Support", href: "/dashboard/support", icon: HelpCircle },
 ];
 
+// indigo-600
+function NavRow({ item, isActive, isOpen, onNavigate }) {
+  const Icon = item.icon;
+  return (
+    <Link href={item.href} className="block" onClick={onNavigate}>
+      <div
+        className={`sidebar-nav-item relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+          isActive 
+            ? "text-white bg-indigo-600 shadow-md shadow-indigo-600/10 font-semibold" 
+            : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+        } ${!isOpen ? "justify-center px-0 mx-auto w-10 h-10" : "mx-3"}`}
+      >
+        {/* Underlay Layout Animation Pill */}
+        {isActive && (
+          <motion.div
+            layoutId="activeNavPill"
+            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+            className="absolute inset-0 bg-indigo-600 rounded-xl -z-10"
+          />
+        )}
+        
+        <Icon 
+          size={18} 
+          className={`shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+            isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
+          }`} 
+        />
+        
+        {isOpen && <span className="truncate">{item.label}</span>}
+      </div>
+    </Link>
+  );
+}
+
+/* Shared between the desktop rail and the mobile drawer */
+function NavList({ pathname, isOpen, onNavigate }) {
+  return (
+    <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto overflow-x-hidden">
+      {navItems.map((item) => (
+        <NavRow
+          key={item.href}
+          item={item}
+          isActive={pathname === item.href}
+          isOpen={isOpen}
+          onNavigate={onNavigate}
+        />
+      ))}
+    </nav>
+  );
+}
+
+function SignOutButton({ isOpen, onSignOut }) {
+  return (
+    <>
+      <span style={{ display: "flex", justifyContent: 'center', width: '100%', background: 'rgba(255,255,255,0.06)', height: "1px", marginBottom: "10px" }}></span>
+      <button
+        onClick={onSignOut}
+        aria-label="Sign out"
+        className={`flex items-center gap-3 mx-3 mb-5 px-3.5 py-2.5 rounded-xl border border-white/5 text-slate-400 hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-colors text-sm font-medium shrink-0 cursor-pointer ${
+          !isOpen ? "justify-center px-0 w-10 h-10 mx-auto" : ""
+        }`}
+      >
+        <LogOut size={16} className="shrink-0" />
+        {isOpen && <span className="truncate">Sign out</span>}
+      </button>
+    </>
+  );
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, toggleSidebar } = useSidebarStore();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleSignOut = () => {
+    logout?.();
+    router.push("/login");
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile) return;
+
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") toggleSidebar();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, toggleSidebar]);
 
   return (
-    <motion.div
-      animate={{ width: isOpen ? "260px" : "80px" }}
-      transition={{ duration: 0.2, ease: "easeInOut" }}
-      className="hidden md:flex flex-col h-screen bg-sidebar-bg text-sidebar-text border-r border-white/5 relative z-20 shrink-0 select-none"
-    >
-      {/* Brand Header */}
-      <div className="h-16 flex items-center px-5 border-b border-white/5 justify-between">
-        {isOpen ? (
-          <div className="flex items-center gap-2.5 text-white font-display font-semibold text-lg">
-            <div className="h-8 w-8 rounded-full stamp-badge text-gold shrink-0">
-              <GraduationCap size={16} className="text-gold" />
-            </div>
-            <span>EduSphere</span>
+    <>
+      {/* Desktop rail (md and up) */}
+      <motion.aside
+        animate={{ width: isOpen ? 240 : 84 }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        className="hidden md:flex flex-col h-screen bg-slate-950 text-slate-200 border-r border-slate-800/60 shrink-0 select-none overflow-hidden"
+      >
+        {/* Brand header */}
+        <div className={`h-[76px] flex items-center gap-3 border-b border-slate-850 shrink-0 ${isOpen ? "px-5" : "justify-center px-0"}`}>
+          <div className="h-10 w-10 shrink-0 flex items-center justify-center bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
+            <BookOpen size={18} />
           </div>
-        ) : (
-          <div className="h-8 w-8 rounded-full stamp-badge text-gold mx-auto">
-            <GraduationCap size={16} className="text-gold" />
-          </div>
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.15 }}
+                className="leading-tight overflow-hidden whitespace-nowrap flex-1"
+              >
+                <p className="font-semibold text-white text-[16px]">EduSphere</p>
+                <p className="text-[11px] text-slate-500">School Management</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {isOpen && (
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-900 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          )}
+        </div>
+
+        {!isOpen && (
+          <button
+            onClick={toggleSidebar}
+            className="mx-auto mt-4 p-1.5 rounded-lg text-slate-500 hover:bg-slate-900 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={16} />
+          </button>
         )}
 
-        <button
-          onClick={toggleSidebar}
-          className="absolute -right-3 top-5 bg-gold text-sidebar-bg p-1 rounded-full border border-sidebar-bg shadow-md hover:brightness-110 transition-all"
-        >
-          {isOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
-        </button>
-      </div>
+        <NavList pathname={pathname} isOpen={isOpen} />
+        <SignOutButton isOpen={isOpen} onSignOut={handleSignOut} />
+      </motion.aside>
 
-      {/* Navigation Roster */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href;
-
-          return (
-            <Link key={item.href} href={item.href} passHref>
-              <div
-                className={`relative flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 cursor-pointer group ${
-                  isActive
-                    ? "text-white"
-                    : "hover:bg-sidebar-hover hover:text-slate-100"
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavPill"
-                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                    className="absolute inset-0 bg-sidebar-hover rounded-lg border-l-2 border-gold"
-                  />
-                )}
-                <Icon className={`relative h-[18px] w-[18px] shrink-0 ${isActive ? "text-gold" : "text-sidebar-text group-hover:text-slate-200"}`} />
-                {isOpen && <span className="relative">{item.label}</span>}
+      {/* Mobile drawer (below md) */}
+      <AnimatePresence>
+        {isOpen && (
+          <div className="md:hidden">
+            <motion.div
+              key="sidebar-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={toggleSidebar}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40"
+              aria-hidden="true"
+            />
+            <motion.aside
+              key="sidebar-drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", duration: 0.25, ease: "easeInOut" }}
+              className="fixed inset-y-0 left-0 z-50 w-[250px] flex flex-col h-screen bg-slate-950 text-slate-200 shrink-0 select-none overflow-hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
+            >
+              <div className="h-[76px] flex items-center gap-3 border-b border-slate-850 shrink-0 px-5">
+                <div className="h-10 w-10 shrink-0 flex items-center justify-center bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
+                  <BookOpen size={18} />
+                </div>
+                <div className="leading-tight overflow-hidden whitespace-nowrap flex-1">
+                  <p className="font-semibold text-white text-[16px]">EduSphere</p>
+                  <p className="text-[11px] text-slate-500">School Management</p>
+                </div>
+                <button
+                  onClick={toggleSidebar}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-900 hover:text-slate-200 transition-colors shrink-0 cursor-pointer"
+                  aria-label="Close navigation menu"
+                >
+                  <X size={18} />
+                </button>
               </div>
-            </Link>
-          );
-        })}
-      </nav>
 
-      {/* Footer System Version */}
-      {isOpen && (
-        <div className="p-6 border-t border-white/5 text-[11px] text-sidebar-text/70 tracking-wide font-mono">
-          SYSTEM v1.0.0
-        </div>
-      )}
-    </motion.div>
+              <NavList pathname={pathname} isOpen={true} onNavigate={toggleSidebar} />
+              <SignOutButton isOpen={true} onSignOut={handleSignOut} />
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
