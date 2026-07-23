@@ -5,6 +5,7 @@ export const CATEGORY_META = {
   Holiday: { dot: "#10b981", bg: "#e7f9f1", text: "#0ea86c" },
   Other: { dot: "#94a3b8", bg: "#f1f5f9", text: "#475569" },
 };
+
 export const CATEGORY_LIST = Object.keys(CATEGORY_META);
 export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 export const MONTH_NAMES = [
@@ -13,14 +14,27 @@ export const MONTH_NAMES = [
 ];
 
 export const pad = (n) => String(n).padStart(2, "0");
-export const toKey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-export const sameDay = (a, b) => toKey(a) === toKey(b);
+
+export const toKey = (d) => {
+  if (!d) return ""; // Protection for unmounting animations
+  const dateObj = new Date(d);
+  if (isNaN(dateObj)) return "";
+  return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
+};
+
+export const sameDay = (a, b) => {
+  if (!a || !b) return false;
+  return toKey(a) === toKey(b);
+};
+
 export const addMonths = (d, delta) => new Date(d.getFullYear(), d.getMonth() + delta, 1);
+
 export const addDays = (d, delta) => {
   const copy = new Date(d);
   copy.setDate(copy.getDate() + delta);
   return copy;
 };
+
 export const startOfWeek = (d) => {
   const copy = new Date(d);
   const day = (copy.getDay() + 6) % 7; 
@@ -30,6 +44,7 @@ export const startOfWeek = (d) => {
 };
 
 export function buildMonthGrid(viewDate) {
+  if (!viewDate) return [];
   const firstOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
   const gridStart = startOfWeek(firstOfMonth);
   const weeks = [];
@@ -46,11 +61,17 @@ export function buildMonthGrid(viewDate) {
 }
 
 export function formatDayLabel(d) {
-  return d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  if (!d) return ""; // Protection against null date during modal exit
+  const dateObj = new Date(d);
+  if (isNaN(dateObj)) return "";
+  return dateObj.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
 export function formatShort(d) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (!d) return "";
+  const dateObj = new Date(d);
+  if (isNaN(dateObj)) return "";
+  return dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export const emptyDraft = { title: "", category: "School Event", start: "", end: "", location: "" };

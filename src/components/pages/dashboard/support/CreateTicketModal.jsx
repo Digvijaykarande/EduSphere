@@ -29,7 +29,7 @@ export default function CreateTicketModal({
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 w-full max-w-lg max-h-[85vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+              <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
                 <p className="text-base font-display font-semibold text-foreground">
                   Create New Ticket
                 </p>
@@ -41,7 +41,7 @@ export default function CreateTicketModal({
                 </button>
               </div>
 
-              <form onSubmit={handleCreateTicket} className="p-6 space-y-4">
+              <form onSubmit={handleCreateTicket} className="p-4 space-y-4">
                 <div>
                   <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Subject</label>
                   <input
@@ -120,7 +120,7 @@ export default function CreateTicketModal({
 
                 <button
                   type="submit"
-                  className="btn-pill-primary w-full !py-3 text-sm justify-center mt-4 font-bold cursor-pointer"
+                  className="btn-pill-primary w-full !py-2 text-sm justify-center mt-4 font-bold cursor-pointer"
                 >
                   Create Ticket
                 </button>

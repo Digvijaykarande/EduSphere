@@ -54,7 +54,7 @@ export const seedTickets = [
     id: "TCK-1256",
     subject: "Unable to access student portal",
     description: 'I am unable to login to the student portal. It shows "Invalid credentials" even though I am using the correct password.',
-    requester: { name: "Rahul Verma", role: "Parent" },
+    requester: { name: "Nilesh Verma", role: "Parent" },
     category: "IT / Portal",
     priority: "High",
     status: "Open",

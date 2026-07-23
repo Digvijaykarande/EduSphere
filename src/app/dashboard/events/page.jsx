@@ -171,6 +171,7 @@ export default function EventsPage() {
         handleAddEvent={handleAddEvent}
         draft={draft}
         setDraft={setDraft}
+        onSelectDate={setModalDate}
       />
     </div>
   );
