@@ -43,13 +43,14 @@ function NavRow({ item, isActive, isOpen, onNavigate }) {
             ? "text-white bg-indigo-600 shadow-md shadow-indigo-600/10 font-semibold" 
             : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
         } ${!isOpen ? "justify-center px-0 mx-auto w-10 h-10" : "mx-3"}`}
+        style={{color:"white"}}
       >
         {/* Underlay Layout Animation Pill */}
         {isActive && (
           <motion.div
             layoutId="activeNavPill"
             transition={{ type: "spring", stiffness: 420, damping: 34 }}
-            className="absolute inset-0 bg-indigo-600 rounded-xl -z-10"
+            className="absolute inset-0  text-white bg-indigo-600 rounded-xl -z-10"
           />
         )}
         
@@ -137,7 +138,7 @@ export default function Sidebar() {
         className="hidden md:flex flex-col h-screen bg-slate-950 text-slate-200 border-r border-slate-800/60 shrink-0 select-none overflow-hidden"
       >
         {/* Brand header */}
-        <div className={`h-[76px] flex items-center gap-3 border-b border-slate-850 shrink-0 ${isOpen ? "px-5" : "justify-center px-0"}`}>
+        <div className={`h-[76px] flex items-center gap-3 border-slate-850 shrink-0 ${isOpen ? "px-5" : "justify-center px-0"}`} style={{borderBottom:"1px solid #565656"}}>
           <div className="h-10 w-10 shrink-0 flex items-center justify-center bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
             <BookOpen size={18} />
           </div>

@@ -9,7 +9,8 @@ export default function LeaveInbox({ title, subtitle, requests, onApprove, onDen
   const history = requests.filter((r) => r.status !== "Pending");
 
   return (
-    <div className="dashboard-card overflow-hidden flex flex-col lg:flex-row">
+    <div className="dashboard-card overflow-hidden flex flex-col lg:flex-row"
+    style={{display:"flex",gap:"20px"}}>
       
       {/* ========================================= */}
       {/* LEFT SIDE: Pending Approvals (Actionable) */}
@@ -72,7 +73,7 @@ export default function LeaveInbox({ title, subtitle, requests, onApprove, onDen
       {/* ========================================= */}
       {/* RIGHT SIDE: Action History (Read-only)    */}
       {/* ========================================= */}
-      <div className="flex-1 flex flex-col bg-slate-50/50 dark:bg-slate-900/30">
+      <div className="flex-1 flex flex-col bg-slate-50/50 dark:bg-slate-900/30" style={{border:"1px solid #97979714"}}>
         
         {/* Right Header */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">

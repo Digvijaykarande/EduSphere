@@ -311,14 +311,14 @@ button{
 .sidebar-nav-item-active {
   background: linear-gradient(135deg, var(--sidebar-active), #8b7ffb);
   color: #fff;
-  box-shadow: 0 6px 16px -4px rgba(109, 94, 248, 0.55);
+  box-shadow: 0 6px 16px -4px rgba(109, 94, 248, 0.63);
 }
 
 /* ---- Dashboard surface card (stat cards, panels) ---- */
 .dashboard-card {
   background: var(--card);
   border-radius: var(--dash-radius);
-  border: 1px solid #ecebf7;
+  border: 1px solid #8787895e;
   box-shadow: var(--dash-shadow-sm);
 }
 
@@ -389,7 +389,7 @@ button{
 
   /* Secondary Outline Buttons */
   .btn-pill-outline {
-    @apply inline-flex items-center justify-center bg-white border border-slate-200 text-slate-700 hover:border-primary hover:text-primary font-semibold text-sm px-7 py-3.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200;
+    @apply inline-flex items-center justify-center bg-white border border-slate-500 text-slate-700 hover:border-primary hover:text-primary font-semibold text-sm px-7 py-3.5 rounded-full shadow-sm hover:shadow-md transition-all duration-200;
   }
 
   /* Frosted Glass Navigation */

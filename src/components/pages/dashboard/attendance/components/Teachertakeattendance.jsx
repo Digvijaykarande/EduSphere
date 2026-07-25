@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import AttendanceToolbar from "./Attendancetoolbar";
 import BulkActionsBar from "./Bulkactionsbar";
 import SeatGrid from "./Seatgrid";
-import ListView from "./Listview";
+// import ListView from "./Listview";
 import AttendanceSummaryPanel from "./Attendancesummarypanel";
 import { CLASS_SECTIONS, SUBJECTS, PERIODS, ROSTER_BY_SECTION, STATUS_CYCLE } from "@/store/attendance.utils";
 
@@ -44,6 +44,7 @@ export default function TeacherTakeAttendance() {
     setTimeout(() => setSaved(false), 2000);
   }
 
+  
   return (
     <div className="space-y-4">
       <AttendanceToolbar
@@ -52,15 +53,11 @@ export default function TeacherTakeAttendance() {
         date={date} setDate={setDate}
         period={period} setPeriod={setPeriod}
       />
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-2 items-start">
         <div className="space-y-4">
           <BulkActionsBar onMarkAll={markAll} onClearAll={clearAll} query={query} setQuery={setQuery} view={view} setView={setView} />
-          <div className="dashboard-card overflow-hidden">
-            {view === "seat" ? (
+          <div className="dashboard-card ">
               <SeatGrid students={students} onCycle={cycleStatus} query={query} />
-            ) : (
-              <ListView students={students} onSetStatus={setStatus} query={query} />
-            )}
           </div>
         </div>
         <AttendanceSummaryPanel students={students} onSave={handleSave} saved={saved} />

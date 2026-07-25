@@ -2,7 +2,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, CalendarDays, Users, BookOpen, Clock, Check } from "lucide-react";
+import {
+  ChevronDown,
+  CalendarDays,
+  Users,
+  BookOpen,
+  Clock,
+  Check,
+} from "lucide-react";
 import { CLASS_SECTIONS, SUBJECTS, PERIODS } from "@/store/attendance.utils";
 
 // ----------------------------------------------------------------------
@@ -23,7 +30,8 @@ function ModernSelect({ value, options, onChange, icon: Icon, placeholder }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedLabel = options.find(opt => opt.value === value)?.label || placeholder;
+  const selectedLabel =
+    options.find((opt) => opt.value === value)?.label || placeholder;
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
@@ -33,12 +41,20 @@ function ModernSelect({ value, options, onChange, icon: Icon, placeholder }) {
         className="w-full flex items-center justify-between gap-2 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
       >
         <div className="flex items-center gap-2 overflow-hidden">
-          {Icon && <Icon size={16} className="text-slate-400 dark:text-slate-500 shrink-0" />}
+          {Icon && (
+            <Icon
+              size={16}
+              className="text-slate-400 dark:text-slate-500 shrink-0"
+            />
+          )}
           <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
             {selectedLabel}
           </span>
         </div>
-        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          size={14}
+          className={`text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       <AnimatePresence>
@@ -61,13 +77,18 @@ function ModernSelect({ value, options, onChange, icon: Icon, placeholder }) {
                       setIsOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isSelected 
-                        ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400" 
+                      isSelected
+                        ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400"
                         : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                     }`}
                   >
                     <span className="truncate">{option.label}</span>
-                    {isSelected && <Check size={14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                    {isSelected && (
+                      <Check
+                        size={14}
+                        className="text-indigo-600 dark:text-indigo-400 shrink-0"
+                      />
+                    )}
                   </button>
                 );
               })}
@@ -82,18 +103,33 @@ function ModernSelect({ value, options, onChange, icon: Icon, placeholder }) {
 // ----------------------------------------------------------------------
 // Main Toolbar Component
 // ----------------------------------------------------------------------
-export default function AttendanceToolbar({ section, setSection, subject, setSubject, date, setDate, period, setPeriod }) {
+export default function AttendanceToolbar({
+  section,
+  setSection,
+  subject,
+  setSubject,
+  date,
+  setDate,
+  period,
+  setPeriod,
+}) {
   const dateInputRef = useRef(null);
 
   // Format data for the custom dropdowns
-  const classOptions = CLASS_SECTIONS.map((c) => ({ value: c.value, label: `${c.class} - ${c.section}` }));
+  const classOptions = CLASS_SECTIONS.map((c) => ({
+    value: c.value,
+    label: `${c.class} - ${c.section}`,
+  }));
   const subjectOptions = SUBJECTS.map((s) => ({ value: s, label: s }));
   const periodOptions = PERIODS.map((p) => ({ value: p, label: p }));
 
   // Programmatically trigger the hidden native date picker
   const handleDateClick = () => {
     try {
-      if (dateInputRef.current && typeof dateInputRef.current.showPicker === 'function') {
+      if (
+        dateInputRef.current &&
+        typeof dateInputRef.current.showPicker === "function"
+      ) {
         dateInputRef.current.showPicker();
       } else {
         dateInputRef.current.focus();
@@ -104,21 +140,26 @@ export default function AttendanceToolbar({ section, setSection, subject, setSub
   };
 
   // Format date nicely (e.g., "Jul 23, 2026")
-  const formattedDate = date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Select Date";
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "Select Date";
 
   return (
     <div className="dashboard-card p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      
       {/* Class & Section */}
       <div>
         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 block">
           Class & Section
         </label>
-        <ModernSelect 
-          value={section} 
-          options={classOptions} 
-          onChange={setSection} 
-          icon={Users} 
+        <ModernSelect
+          value={section}
+          options={classOptions}
+          onChange={setSection}
+          icon={Users}
         />
       </div>
 
@@ -127,11 +168,11 @@ export default function AttendanceToolbar({ section, setSection, subject, setSub
         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 block">
           Subject
         </label>
-        <ModernSelect 
-          value={subject} 
-          options={subjectOptions} 
-          onChange={setSubject} 
-          icon={BookOpen} 
+        <ModernSelect
+          value={subject}
+          options={subjectOptions}
+          onChange={setSubject}
+          icon={BookOpen}
         />
       </div>
 
@@ -142,9 +183,9 @@ export default function AttendanceToolbar({ section, setSection, subject, setSub
         </label>
         <div className="relative group w-full">
           {/* Hidden native input */}
-          <input 
+          <input
             ref={dateInputRef}
-            type="date" 
+            type="date"
             value={date}
             onChange={(e) => {
               if (e.target.value) setDate(e.target.value);
@@ -152,12 +193,15 @@ export default function AttendanceToolbar({ section, setSection, subject, setSub
             className="absolute opacity-0 w-0 h-0 pointer-events-none"
             tabIndex={-1}
           />
-          <button 
+          <button
             type="button"
             onClick={handleDateClick}
             className="w-full flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl px-3.5 py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           >
-            <CalendarDays size={16} className="text-slate-400 dark:text-slate-500 shrink-0" />
+            <CalendarDays
+              size={16}
+              className="text-slate-400 dark:text-slate-500 shrink-0"
+            />
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
               {formattedDate === "Invalid Date" ? date : formattedDate}
             </span>
@@ -170,14 +214,13 @@ export default function AttendanceToolbar({ section, setSection, subject, setSub
         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 block">
           Period
         </label>
-        <ModernSelect 
-          value={period} 
-          options={periodOptions} 
-          onChange={setPeriod} 
-          icon={Clock} 
+        <ModernSelect
+          value={period}
+          options={periodOptions}
+          onChange={setPeriod}
+          icon={Clock}
         />
       </div>
-
     </div>
   );
 }

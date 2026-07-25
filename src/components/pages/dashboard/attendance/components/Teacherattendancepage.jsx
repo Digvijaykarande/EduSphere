@@ -17,20 +17,21 @@ export default function TeacherAttendancePage() {
   const actOnStudentLeave = useLeaveStore((s) => s.actOnStudentLeave);
   const submitTeacherLeave = useLeaveStore((s) => s.submitTeacherLeave);
   
-  // FIX: Select the raw array first, then filter it memoized
   const rawTeacherLeaves = useLeaveStore((s) => s.teacherLeaves);
   const myLeaves = useMemo(() => {
     return rawTeacherLeaves.filter((r) => r.name === user.name);
   }, [rawTeacherLeaves, user.name]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-max">
+    <div className="space-y-4 max-w-full overflow-hidden">
+      {/* Updated to allow smooth horizontal scrolling on mobile instead of forcing w-max */}
+      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit-content overflow-x-auto no-scrollbar" style={{flexWrap:"wrap",width:"fit-content"}} 
+      >
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`px-3.5 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
               tab === t ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 dark:text-slate-400"
             }`}
           >
@@ -40,7 +41,6 @@ export default function TeacherAttendancePage() {
       </div>
 
       {tab === "Take Attendance" && <TeacherTakeAttendance />}
-
       {tab === "Student Leave Requests" && (
         <LeaveInbox
           title="Student Leave Requests"

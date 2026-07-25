@@ -9,6 +9,7 @@ const data = [
   { name: "Wed", rate: 92 },
   { name: "Thu", rate: 97 },
   { name: "Fri", rate: 95 },
+  { name: "Sat", rate: 85 },
 ];
 
 export default function AttendanceChart() {

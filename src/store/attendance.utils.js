@@ -1,3 +1,5 @@
+import { style } from "framer-motion/client";
+
 export const ROLE_PERMISSIONS = {
   "Super Admin": { scope: "school" },
   Principal: { scope: "school" },

@@ -8,7 +8,7 @@ export default function SeatGrid({ students, onCycle, query = "" }) {
   const q = query.trim().toLowerCase();
 
   return (
-    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 p-4">
+    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 p-3 z-3">
       {students.map((s) => {
         const dim = q && !s.name.toLowerCase().includes(q) && !String(s.rollNo).includes(q);
         const meta = STATUS_META[s.status];
@@ -24,7 +24,7 @@ export default function SeatGrid({ students, onCycle, query = "" }) {
             </button>
 
             {/* Modern Custom Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none transform translate-y-1 group-hover:translate-y-0">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none transform translate-y-1 group-hover:translate-y-0 z-22">
               
               {/* Profile Header */}
               <div className="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
@@ -45,7 +45,7 @@ export default function SeatGrid({ students, onCycle, query = "" }) {
                   s.status === 'absent' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
                   s.status === 'late' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
                   'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-                }`}>
+                }`} style={{display:'flex'}}>
                   {meta.label}
                 </span>
               </div>
