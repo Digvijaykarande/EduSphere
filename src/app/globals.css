@@ -318,7 +318,7 @@ button{
 .dashboard-card {
   background: var(--card);
   border-radius: var(--dash-radius);
-  border: 1px solid #8787895e;
+  border: 1px solid #7676765e;
   box-shadow: var(--dash-shadow-sm);
 }
 

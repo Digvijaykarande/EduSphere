@@ -75,7 +75,7 @@ export default function Navbar() {
           >
             <Bell size={19} />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+              <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900 dark:text-#ff0000">
                 {unreadCount}
               </span>
             )}
@@ -129,7 +129,7 @@ export default function Navbar() {
                 className="fixed inset-0 z-10"
                 onClick={() => setDropdownOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-20 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg py-1.5 z-30 overflow-hidden">
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setDropdownOpen(false)}

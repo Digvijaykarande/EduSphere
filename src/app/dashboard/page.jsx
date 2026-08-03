@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import PageWrapper from "@/components/shared/PageWrapper";
 import AttendanceChart from "@/components/pages/dashboard/attendance/components/AttendanceChart";
-import GradeAnalyticsChart from "@/components/pages/dashboard/exams/components/GradeAnalyticsChart";
+import GradeAnalyticsChart from "@/components/pages/dashboard/exams/GradeAnalyticsChart";
 import { 
   Users, CheckCircle2, DollarSign, AlertCircle, Clock, 
   ArrowUpRight, ShieldCheck, Zap, PlusCircle, Check 

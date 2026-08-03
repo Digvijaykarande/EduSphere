@@ -1,90 +1,109 @@
+// src/app/dashboard/exams/page.jsx
 "use client";
 
 import React, { useState } from "react";
-import PageWrapper from "@/components/shared/PageWrapper";
-import GradebookTable from "@/components/pages/dashboard/exams/components/GradebookTable";
-import { FileSpreadsheet, ClipboardList, TrendingUp, Award } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus } from "lucide-react";
+import RoleSwitcher from "@/components/pages/dashboard/fees/RoleSwitcher";
+import PrincipalOverview from "@/components/pages/dashboard/exams/PrincipleOverview";
+import StudentOverview from "@/components/pages/dashboard/exams/StudentOverview";
+import GradebookTable from "@/components/pages/dashboard/exams/GradebookTable";
+import CreateExamModal from "@/components/pages/dashboard/exams/CreateExamModal";
+import AllExamsList from "@/components/pages/dashboard/exams/AllExamsList";
+import ExamSchedule from "@/components/pages/dashboard/exams/ExamSchedule";
+import ResultsManagement from "@/components/pages/dashboard/exams/ResultsManagement";
+import AnalyticsDashboard from "@/components/pages/dashboard/exams/AnalyticsDashboard";
+
+const TABS = ["Overview", "All Exams", "Schedule", "Results", "Analytics", "Gradebook"];
 
 export default function ExamsPage() {
-  const [selectedAssessment, setSelectedAssessment] = useState("mid-term");
-  const [selectedSubject, setSelectedSubject] = useState("math");
+  const [role, setRole] = useState("principal");
+  const [activeTab, setActiveTab] = useState("Overview");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [gradebookSubject, setGradebookSubject] = useState("All Subjects");
 
   return (
-    <PageWrapper>
-      {/* Module Title Section */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6">
+      
+      {/* Header Context */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Examination & Gradebook</h1>
-          <p className="text-sm text-slate-500 mt-1">Configure assessment metrics, record student marks, and compile institutional grading scales.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Exams Dashboard</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage exams, schedules, results and analytics</p>
         </div>
-
-        {/* Configuration Filters Layer */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Term:</label>
-            <select
-              value={selectedAssessment}
-              onChange={(e) => setSelectedAssessment(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-primary shadow-sm"
-            >
-              <option value="mid-term">Mid-Term Evaluation (Weightage: 30%)</option>
-              <option value="final-exam">Final Theory Examination (Weightage: 70%)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Subject:</label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:border-primary shadow-sm"
-            >
-              <option value="math">Mathematics (Grade 10-A)</option>
-              <option value="physics">Physics (Grade 11-B)</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-4">
+          <RoleSwitcher currentRole={role} onRoleChange={setRole} />
+          {role === "principal" && (
+            <button onClick={() => setIsModalOpen(true)} className="hidden sm:flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-600 shadow-md transition-all">
+              <Plus size={16} /> Create Exam
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Grade Summary Analytics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-primary rounded-xl"><ClipboardList size={20} /></div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase">Evaluations Graded</p>
-            <h4 className="text-xl font-bold text-slate-800 mt-0.5">42 / 42 Papers</h4>
+      {role === "principal" ? (
+        <>
+          {/* Custom Tab Navigation */}
+          <div className="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
+            {TABS.map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative py-3 text-sm font-bold transition-colors whitespace-nowrap ${
+                  activeTab === tab ? "text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {tab}
+                {activeTab === tab && (
+                  <motion.div layoutId="exam-tab-underline" className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary rounded-full" />
+                )}
+              </button>
+            ))}
           </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-success rounded-xl"><TrendingUp size={20} /></div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase">Class Average Score</p>
-            <h4 className="text-xl font-bold text-slate-800 mt-0.5">78.4 / 100</h4>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><Award size={20} /></div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase">Passing Rate Metric</p>
-            <h4 className="text-xl font-bold text-emerald-600 mt-0.5">92.8% Passing</h4>
-          </div>
-        </div>
-      </div>
 
-      {/* Interactive Gradebook Entry Roster Card */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div>
-            <h3 className="text-base font-bold text-slate-800">Live Marks Ingestion Roster</h3>
-            <p className="text-xs text-slate-400">Input values directly. The system automatically computes relative grade letters instantly.</p>
+          {/* Conditional Rendering based on Tab */}
+          <div className="mt-6">
+            <AnimatePresence mode="wait">
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                {activeTab === "Overview" && (
+                  <PrincipalOverview
+                    onNavigateTab={setActiveTab}
+                    onCreateExam={() => setIsModalOpen(true)}
+                  />
+                )}
+                {activeTab === "All Exams" && <AllExamsList />}
+                {activeTab === "Schedule" && <ExamSchedule />}
+                {activeTab === "Results" && <ResultsManagement />}
+                {activeTab === "Analytics" && <AnalyticsDashboard />}
+                {activeTab === "Gradebook" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                       <h2 className="text-lg font-bold text-slate-900 dark:text-white">Gradebook Management</h2>
+                       <select
+                         value={gradebookSubject}
+                         onChange={(e) => setGradebookSubject(e.target.value)}
+                         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none"
+                       >
+                         <option>All Subjects</option>
+                         <option>Mathematics</option>
+                         <option>Object-Oriented Software Eng.</option>
+                         <option>Full-Stack Web Dev</option>
+                       </select>
+                    </div>
+                    <GradebookTable subject={gradebookSubject} />
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
-          <button className="flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-xl hover:bg-emerald-700 transition-all shadow-sm">
-            <FileSpreadsheet size={14} /> Export Marks Sheet (CSV)
-          </button>
-        </div>
+        </>
+      ) : (
+        <StudentOverview />
+      )}
 
-        <GradebookTable subject={selectedSubject} assessment={selectedAssessment} />
-      </div>
-    </PageWrapper>
+      {/* Global Modals */}
+      <CreateExamModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+    </div>
   );
 }

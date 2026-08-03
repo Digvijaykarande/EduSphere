@@ -1,188 +1,182 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  AlertCircle, 
-  Wallet, 
-  Search, 
-  Filter, 
-  Plus, 
-  Download,
-  MoreVertical,
-  CheckCircle2,
-  Clock
-} from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Search, ChevronDown, FileText, FileSpreadsheet } from "lucide-react";
 
-// Mock Data for Financial Overview
-const feeStats = [
-  { label: "Total Collected", value: "₹4.8M", change: "+12.5% this month", icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-100" },
-  { label: "Pending Dues", value: "₹850K", change: "142 students pending", icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50 border-amber-100" },
-  { label: "Expected Revenue", value: "₹5.65M", change: "Term 2 Projections", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
-  { label: "Recent Refunds", value: "₹24K", change: "3 disputes resolved", icon: Wallet, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-];
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 
-// Mock Data for the Ledger Table
-const transactions = [
-  { id: "INV-2026-9041", student: "Aarav Sharma", studentId: "EGS-104", grade: "Grade 10-A", amount: "₹45,000", date: "Jul 10, 2026", status: "Paid", method: "Credit Card" },
-  { id: "INV-2026-9042", student: "Priya Desai", studentId: "EGS-219", grade: "Grade 12-B", amount: "₹52,000", date: "Jul 09, 2026", status: "Pending", method: "Bank Transfer" },
-  { id: "INV-2026-9043", student: "Rohan Gupta", studentId: "EGS-084", grade: "Grade 8-C", amount: "₹38,000", date: "Jul 05, 2026", status: "Overdue", method: "Cash" },
-  { id: "INV-2026-9044", student: "Ananya Singh", studentId: "EGS-302", grade: "Grade 11-A", amount: "₹48,000", date: "Jul 11, 2026", status: "Paid", method: "UPI" },
-  { id: "INV-2026-9045", student: "Kabir Khan", studentId: "EGS-115", grade: "Grade 9-B", amount: "₹42,000", date: "Jul 11, 2026", status: "Paid", method: "Credit Card" },
-];
+import RoleSwitcher from "@/components/pages/dashboard/fees/RoleSwitcher";
+import ClassSectionFilter from "@/components/pages/dashboard/fees/ClassSectionFilter";
+import StudentFeeDetailModal from "@/components/pages/dashboard/fees/StudentFeeDetailModel";
+import StudentView from "@/components/pages/dashboard/fees/StudentView";
+import FeesTable from "@/components/pages/dashboard/fees/FeesTable";
+import { StatCard } from "@/components/pages/dashboard/fees/shared";
+import { feeStatsPrincipal, studentsList } from "@/components/pages/dashboard/fees/mockData";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-};
+const STATUS_TABS = ["ALL", "Pending", "Partial Paid", "Paid"];
 
 export default function FeesPage() {
+  const [role, setRole] = useState("principal");
+  const [selectedClass, setSelectedClass] = useState("ALL");
+  const [selectedFeeCategory, setSelectedFeeCategory] = useState("ALL");
+  const [statusTab, setStatusTab] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "Paid":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><CheckCircle2 className="h-3 w-3" /> PAID</span>;
-      case "Pending":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><Clock className="h-3 w-3" /> PENDING</span>;
-      case "Overdue":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"><AlertCircle className="h-3 w-3" /> OVERDUE</span>;
-      default:
-        return null;
-    }
-  };
+  const filteredStudents = studentsList.filter((s) => {
+    const matchesSearch =
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesClass = selectedClass === "ALL" || s.class === selectedClass;
+    const matchesStatus =
+      statusTab === "ALL" || s.status.toLowerCase().replace(" ", "") === statusTab.toLowerCase().replace(" ", "");
+    const matchesFeeCategory =
+      selectedFeeCategory === "ALL" ||
+      s.breakdown.some((b) => b.particular.toLowerCase().includes(selectedFeeCategory.toLowerCase()));
+    return matchesSearch && matchesClass && matchesStatus && matchesFeeCategory;
+  });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
-      
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8">
+      {/* Top Header & Role Switcher Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-slate-900 tracking-tight">Fee Collection & Ledger</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage student billing, track pending dues, and process digital receipts.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Fees Dashboard</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Overview of all fee collections and student payments
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm transition-all">
-            <Download className="h-4 w-4" /> Export Report
-          </button>
-          <button className="flex items-center gap-2 bg-[#3454d1] text-white hover:bg-blue-700 text-xs font-bold px-4 py-2.5 rounded-lg shadow-md transition-all">
-            <Plus className="h-4 w-4" /> Generate Invoice
-          </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <RoleSwitcher currentRole={role} onRoleChange={setRole} />
+          {role === "principal" && <ExportMenu />}
         </div>
       </div>
 
-      {/* Financial Stats Grid */}
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-      >
-        {feeStats.map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div key={idx} variants={itemVariants} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-start gap-4">
-              <div className={`h-12 w-12 rounded-xl flex items-center justify-center border shrink-0 ${stat.bg}`}>
-                <Icon className={`h-6 w-6 ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{stat.label}</p>
-                <h3 className="text-2xl font-mono font-bold text-slate-900 mt-1">{stat.value}</h3>
-                <p className="text-[11px] font-medium text-slate-400 mt-1">{stat.change}</p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
-
-      {/* Ledger Table Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
-        className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden"
-      >
-        {/* Table Toolbar */}
-        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search by student name or invoice ID..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-[#3454d1] focus:ring-2 focus:ring-blue-500/10 transition-all"
-            />
+      {role === "student" ? (
+        /* STUDENT VIEW SCOPE */
+        <StudentView />
+      ) : (
+        /* PRINCIPAL VIEW SCOPE */
+        <div className="space-y-4">
+          {/* Top Stat Overview Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {feeStatsPrincipal.map((stat) => (
+              <StatCard key={stat.label} {...stat} />
+            ))}
           </div>
-          <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold px-4 py-2 rounded-lg transition-all">
-            <Filter className="h-4 w-4" /> Filter Records
-          </button>
-        </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
-                <th className="px-6 py-4 font-semibold">Invoice ID</th>
-                <th className="px-6 py-4 font-semibold">Student Info</th>
-                <th className="px-6 py-4 font-semibold">Amount</th>
-                <th className="px-6 py-4 font-semibold">Date / Method</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm">
-              {transactions.map((tx, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/80 transition-colors group">
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-xs font-bold text-slate-700">{tx.id}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-slate-900 text-xs">{tx.student}</p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{tx.studentId} • {tx.grade}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="font-mono font-bold text-slate-900">{tx.amount}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-xs text-slate-700 font-medium">{tx.date}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{tx.method}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(tx.status)}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors">
-                      <MoreVertical className="h-4 w-4" />
+          {/* Class & Section Selection Bar */}
+          <ClassSectionFilter
+            selectedClass={selectedClass}
+            onClassChange={setSelectedClass}
+            selectedFeeCategory={selectedFeeCategory}
+            onFeeCategoryChange={setSelectedFeeCategory}
+          />
+
+          {/* 
+            STICKY TOOLBAR (Moved OUTSIDE the split grid)
+            Now it always spans 100% width, regardless of the student profile state.
+          */}
+          <div className="sticky top-0 z-30 pt-2 pb-2 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md">
+            <div className="dashboard-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl">
+              
+              {/* Status Tabs */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-auto overflow-x-auto no-scrollbar">
+                {STATUS_TABS.map((tab) => {
+                  const active = statusTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      onClick={() => setStatusTab(tab)}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
+                        active
+                          ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                          : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      {tab === "ALL" ? "All Students" : tab}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Pagination Footer */}
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
-          <span>Showing 1 to 5 of 142 records</span>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-white transition-colors disabled:opacity-50" disabled>Prev</button>
-            <button className="px-3 py-1 border border-slate-200 rounded bg-white font-bold text-[#3454d1]">1</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-white transition-colors">2</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-white transition-colors">3</button>
-            <button className="px-3 py-1 border border-slate-200 rounded hover:bg-white transition-colors">Next</button>
+                  );
+                })}
+              </div>
+
+              {/* Interactive Expanding Search Bar */}
+              <div className="relative w-full sm:w-64 focus-within:sm:w-80 xl:focus-within:w-96 transition-all duration-300 ease-out flex-shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  type="text"
+                  placeholder="Search by name or admission no..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs h-10 w-full focus:ring-2 focus:ring-primary/30 transition-all shadow-sm border-slate-200 dark:border-slate-700 hover:border-primary/50"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Table + Detail Sidebar Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-4 items-start relative mt-4">
+            
+            {/* Table Column */}
+            <div className={`${selectedStudent ? "lg:col-span-7 xl:col-span-8" : "lg:col-span-12"} transition-all duration-300 min-w-0`}>
+              {/* Main Students Fee Table */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <FeesTable
+                  key={`${searchTerm}-${selectedClass}-${selectedFeeCategory}-${statusTab}`}
+                  students={filteredStudents}
+                  onSelectStudent={setSelectedStudent}
+                  isProfileOpen={!!selectedStudent}
+                />
+              </div>
+            </div>
+
+            {/* STICKY & SCROLLABLE Selected Student Detail Drawer Panel */}
+            <AnimatePresence>
+              {selectedStudent && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="lg:col-span-5 xl:col-span-4 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar rounded-2xl"
+                >
+                  <StudentFeeDetailModal
+                    student={selectedStudent}
+                    onClose={() => setSelectedStudent(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </div>
         </div>
-
-      </motion.div>
+      )}
     </div>
+  );
+}
+
+function ExportMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 dash-focus">
+        Export Report <ChevronDown className="h-3.5 w-3.5" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem className="gap-2 text-xs cursor-pointer">
+          <FileText className="h-3.5 w-3.5" /> Export as PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 text-xs cursor-pointer">
+          <FileSpreadsheet className="h-3.5 w-3.5" /> Export as Excel
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
