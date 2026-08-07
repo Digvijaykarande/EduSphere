@@ -23,15 +23,15 @@ export default function ExamsPage() {
   const [gradebookSubject, setGradebookSubject] = useState("All Subjects");
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6">
+    <div className="p-3 sm:p-4 md:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6 pb-24 sm:pb-6">
       
       {/* Header Context */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Exams Dashboard</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage exams, schedules, results and analytics</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Exams Dashboard</h1>
+          <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1">Manage exams, schedules, results and analytics</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
           <RoleSwitcher currentRole={role} onRoleChange={setRole} />
           {role === "principal" && (
             <button onClick={() => setIsModalOpen(true)} className="hidden sm:flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-blue-600 shadow-md transition-all">
@@ -41,15 +41,26 @@ export default function ExamsPage() {
         </div>
       </div>
 
+      {/* Mobile floating Create Exam button */}
+      {role === "principal" && (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="sm:hidden fixed bottom-5 right-5 z-40 flex items-center justify-center h-14 w-14 rounded-full bg-primary text-white shadow-2xl active:scale-95 transition-transform"
+          aria-label="Create Exam"
+        >
+          <Plus size={22} />
+        </button>
+      )}
+
       {role === "principal" ? (
         <>
           {/* Custom Tab Navigation */}
-          <div className="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-4 sm:gap-6 border-b border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
             {TABS.map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`relative py-3 text-sm font-bold transition-colors whitespace-nowrap ${
+                className={`relative py-3 text-xs sm:text-sm font-bold transition-colors whitespace-nowrap shrink-0 ${
                   activeTab === tab ? "text-primary" : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
@@ -62,7 +73,7 @@ export default function ExamsPage() {
           </div>
 
           {/* Conditional Rendering based on Tab */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
                 {activeTab === "Overview" && (
@@ -77,19 +88,6 @@ export default function ExamsPage() {
                 {activeTab === "Analytics" && <AnalyticsDashboard />}
                 {activeTab === "Gradebook" && (
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                       <h2 className="text-lg font-bold text-slate-900 dark:text-white">Gradebook Management</h2>
-                       <select
-                         value={gradebookSubject}
-                         onChange={(e) => setGradebookSubject(e.target.value)}
-                         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none"
-                       >
-                         <option>All Subjects</option>
-                         <option>Mathematics</option>
-                         <option>Object-Oriented Software Eng.</option>
-                         <option>Full-Stack Web Dev</option>
-                       </select>
-                    </div>
                     <GradebookTable subject={gradebookSubject} />
                   </div>
                 )}

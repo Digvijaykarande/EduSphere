@@ -1,137 +1,241 @@
-// src/components/pages/dashboard/exams/StudentOverview.jsx
 "use client";
 
 import React from "react";
 import { motion } from "framer-motion";
-import { LineChart, Calendar, Award, Download, CalendarDays, Clock, MapPin } from "lucide-react";
+import { Calendar, Award, Download, CalendarDays, Clock, MapPin, TrendingUp } from "lucide-react";
 import { stats, upcomingExams, recentResults, examTimetable, studentReportCard } from "./mockData";
 
+// Framer motion variants for staggered loading
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+};
+
 export default function StudentOverview() {
-  const gpa = (studentReportCard.reduce((sum, r) => sum + r.score, 0) / studentReportCard.length / 25).toFixed(1);
+  // Safe GPA calculation
+  const totalScore = studentReportCard.reduce((sum, r) => sum + r.score, 0);
+  const gpa = studentReportCard.length ? (totalScore / studentReportCard.length / 25).toFixed(1) : "0.0";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto space-y-6">
-      
-      {/* Student Top Banner */}
-      <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-6">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden" 
+      animate="show" 
+      className="max-w-5xl mx-auto space-y-6"
+    >
+      {/* ----------------- PREMIUM TOP BANNER ----------------- */}
+      <motion.div 
+        variants={itemVariants}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 md:p-8 text-white shadow-xl border border-indigo-900/50"
+      >
+        {/* Subtle Background Glow */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+
+        {/* Header Row */}
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-xl font-bold">Exam Overview</h2>
-            <p className="text-xs text-indigo-300 mt-1">This Academic Year (2025-26)</p>
-            <div className="mt-4 flex items-center gap-4">
-              <div className="bg-indigo-950/60 p-3 rounded-xl border border-indigo-800/40">
-                <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Overall GPA</p>
-                <p className="text-2xl font-mono font-bold text-emerald-400 mt-0.5">{gpa}<span className="text-sm text-indigo-500">/4.0</span></p>
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold tracking-tight">Exam Overview</h2>
+            <p className="text-xs text-indigo-300 mt-1 font-medium">Academic Year 2025-26</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm"><LineChart size={24} className="text-indigo-200"/></div>
-            <button className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all">
-              <Download size={14} /> Download Transcript
-            </button>
-          </div>
+          <button className="flex items-center justify-center gap-2 bg-white text-indigo-950 hover:bg-slate-100 font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg transition-all focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900">
+            <Download size={14} strokeWidth={2.5} /> Download Transcript
+          </button>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-indigo-800/50">
-           <div><p className="text-2xl font-bold">{stats.totalExams}</p><p className="text-[10px] text-indigo-300 uppercase">Total Exams</p></div>
-           <div><p className="text-2xl font-bold text-amber-400">{stats.upcomingExams}</p><p className="text-[10px] text-indigo-300 uppercase">Upcoming</p></div>
-           <div><p className="text-2xl font-bold text-emerald-400">{stats.completedExams}</p><p className="text-[10px] text-indigo-300 uppercase">Completed</p></div>
-           <div><p className="text-2xl font-bold">{stats.averageScore}</p><p className="text-[10px] text-indigo-300 uppercase">Avg Score</p></div>
+        {/* Unified 5-Card Stats Grid */}
+        <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-4">
+           
+           {/* 1. Overall GPA */}
+           <div className="bg-white/5 backdrop-blur-md px-4 py-4 rounded-2xl border border-white/10 shadow-inner flex flex-col justify-center transition-colors hover:bg-white/10">
+             <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+               <TrendingUp size={12} /> GPA
+             </p>
+             <div className="flex items-baseline gap-1">
+               <p className="text-3xl font-mono font-extrabold text-emerald-400 leading-none">{gpa}</p>
+               <span className="text-sm font-bold text-indigo-400">/4.0</span>
+             </div>
+           </div>
+
+           {/* 2. Total Exams */}
+           <div className="bg-white/5 backdrop-blur-md px-4 py-4 rounded-2xl border border-white/10 shadow-inner flex flex-col justify-center transition-colors hover:bg-white/10">
+             <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1.5">Total Exam</p>
+             <p className="text-3xl font-mono font-extrabold text-white leading-none">{stats.totalExams}</p>
+           </div>
+
+           {/* 3. Upcoming */}
+           <div className="bg-white/5 backdrop-blur-md px-4 py-4 rounded-2xl border border-white/10 shadow-inner flex flex-col justify-center transition-colors hover:bg-white/10">
+             <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1.5">Upcoming Exam</p>
+             <p className="text-3xl font-mono font-extrabold text-amber-400 leading-none">{stats.upcomingExams}</p>
+           </div>
+
+           {/* 4. Completed */}
+           <div className="bg-white/5 backdrop-blur-md px-4 py-4 rounded-2xl border border-white/10 shadow-inner flex flex-col justify-center transition-colors hover:bg-white/10">
+             <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1.5">Completed Exam</p>
+             <p className="text-3xl font-mono font-extrabold text-blue-400 leading-none">{stats.completedExams}</p>
+           </div>
+
+           {/* 5. Avg Score */}
+           <div className="bg-white/5 backdrop-blur-md px-4 py-4 rounded-2xl border border-white/10 shadow-inner flex flex-col justify-center transition-colors hover:bg-white/10">
+             <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mb-1.5">Avg Score</p>
+             <div className="flex items-baseline gap-1">
+               <p className="text-3xl font-mono font-extrabold text-white leading-none">{stats.averageScore}</p>
+               <span className="text-sm font-bold text-indigo-400">%</span>
+             </div>
+           </div>
+
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Subject Breakdown */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Subject Breakdown</h3>
+        {/* ----------------- SUBJECT BREAKDOWN ----------------- */}
+        <motion.div variants={itemVariants} className="bg-card border border-border rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+              <Award className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-foreground">Subject Breakdown</h3>
           </div>
-          <div className="space-y-3">
+          
+          <div className="space-y-4">
             {studentReportCard.map((res, idx) => (
-              <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{res.subject}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">{res.score}/100</span>
-                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] border border-emerald-500/20">
+              <div key={idx} className="group p-4 rounded-2xl bg-muted/30 border border-border hover:border-primary/30 hover:bg-muted/50 transition-all">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-bold text-foreground">{res.subject}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-muted-foreground">{res.score}/100</span>
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-success/10 text-success font-bold text-[10px] border border-success/20">
                       {res.grade}
                     </span>
                   </div>
                 </div>
-                <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${res.score}%` }} />
+                {/* Custom Progress Bar */}
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden relative">
+                  <motion.div 
+                    initial={{ width: 0 }} 
+                    whileInView={{ width: `${res.score}%` }} 
+                    viewport={{ once: true }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="absolute top-0 left-0 h-full rounded-full bg-primary" 
+                  />
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Timetable */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-           <div className="flex items-center gap-2 mb-4">
-            <CalendarDays className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Upcoming Schedule</h3>
+        {/* ----------------- TIMETABLE GRID ----------------- */}
+        <motion.div variants={itemVariants} className="bg-card border border-border rounded-3xl p-6 shadow-sm">
+           <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+              <CalendarDays className="w-4 h-4" />
+            </div>
+            <h3 className="text-sm font-bold text-foreground">Upcoming Schedule</h3>
           </div>
-          <div className="relative border-l-2 border-slate-100 dark:border-slate-800 ml-3 space-y-6 pb-2">
-            {examTimetable.map((exam, idx) => (
-              <div key={idx} className="relative pl-6">
-                <div className={`absolute -left-[9px] top-1 h-4 w-4 rounded-full border-4 border-white dark:border-slate-900 ${exam.status === 'Completed' ? 'bg-slate-300 dark:bg-slate-600' : 'bg-primary'}`} />
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{exam.subject}</p>
-                <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500"><CalendarDays className="w-3 h-3" /> {exam.date}</span>
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500"><Clock className="w-3 h-3" /> {exam.time}</span>
-                  <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-500"><MapPin className="w-3 h-3" /> {exam.room}</span>
+          
+          {/* Grid Layout replacing the timeline */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {examTimetable.map((exam, idx) => {
+              const isCompleted = exam.status === 'Completed';
+              return (
+                <div key={idx} className="group flex flex-col justify-between p-4 rounded-2xl bg-muted/20 border border-border hover:bg-muted/40 hover:border-primary/30 transition-all">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider border ${
+                      isCompleted 
+                        ? 'bg-muted text-muted-foreground border-border' 
+                        : 'bg-primary/10 text-primary border-primary/20'
+                    }`}>
+                      {exam.status}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                      <CalendarDays className="w-3 h-3 text-primary/70" /> {exam.date}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-bold text-foreground leading-tight group-hover:text-primary transition-colors">{exam.subject}</p>
+                    <div className="flex flex-wrap items-center gap-3 mt-3 text-[10px] font-semibold text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 text-primary/70" /> {exam.time}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-3 h-3 text-primary/70" /> {exam.room}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Upcoming */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Calendar className="text-primary w-4 h-4"/> Upcoming Exams</h3>
+        {/* ----------------- UPCOMING EXAMS LIST ----------------- */}
+        <motion.div variants={itemVariants} className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-sm text-foreground">Upcoming Exams</h3>
+          </div>
+          
           <div className="space-y-3">
              {upcomingExams.map(ex => (
-                <div key={ex.id} className="flex gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                <div key={ex.id} className="group flex items-center justify-between gap-3 p-4 rounded-2xl bg-muted/20 border border-border hover:bg-muted/40 transition-colors">
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{ex.subject}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{ex.test}</p>
+                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{ex.subject}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-1">{ex.test}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{ex.date}</p>
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-indigo-500/10 text-indigo-500 rounded text-[9px] font-bold uppercase">{ex.class}</span>
+                  <div className="text-right flex flex-col items-end">
+                    <p className="text-[10px] font-bold text-foreground flex items-center gap-1.5">
+                      <CalendarDays className="w-3 h-3 text-muted-foreground" /> {ex.date}
+                    </p>
+                    <span className="inline-flex mt-2 px-2 py-0.5 bg-primary/10 text-primary rounded-[4px] text-[9px] font-bold uppercase tracking-wider border border-primary/20">
+                      Class {ex.class}
+                    </span>
                   </div>
                 </div>
               ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Results */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Award className="text-primary w-4 h-4"/> Recent Results</h3>
+        {/* ----------------- RECENT RESULTS LIST ----------------- */}
+        <motion.div variants={itemVariants} className="bg-card rounded-3xl p-6 border border-border shadow-sm">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+              <Award className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-sm text-foreground">Recent Results</h3>
+          </div>
+          
           <div className="space-y-3">
              {recentResults.map(r => (
-                <div key={r.id} className="flex gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                <div key={r.id} className="group flex items-center justify-between gap-3 p-4 rounded-2xl bg-muted/20 border border-border hover:bg-muted/40 transition-colors">
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{r.subject}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{r.test}</p>
+                    <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{r.subject}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-1">{r.test}</p>
                   </div>
-                  <div className="text-right flex flex-col items-end justify-center">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide ${r.status === 'Published' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                  <div className="text-right flex flex-col items-end">
+                    <span className={`inline-flex px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider border ${
+                      r.status === 'Published' 
+                        ? 'bg-success/10 text-success border-success/20' 
+                        : 'bg-warning/10 text-warning border-warning/20'
+                    }`}>
                       {r.status}
                     </span>
-                    <p className="text-[9px] text-slate-400 mt-1">{r.date}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-2">{r.date}</p>
                   </div>
                 </div>
               ))}
           </div>
-        </div>
+        </motion.div>
 
       </div>
     </motion.div>

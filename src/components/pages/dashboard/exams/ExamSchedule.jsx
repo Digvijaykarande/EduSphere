@@ -2,7 +2,14 @@
 
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CalendarDays, Clock, MapPin, Users, AlertTriangle, Edit3, Trash2, CheckCircle2 } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Users, AlertTriangle, Edit3, Trash2, CheckCircle2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { allExamsList } from "./mockData";
 
 // Assign a mock room/time to every exam so the schedule has something concrete to show
@@ -82,7 +89,7 @@ export default function ExamSchedule() {
             initial={{ opacity: 0, height: 0 }} 
             animate={{ opacity: 1, height: "auto" }} 
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold shadow-sm"
+            className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold shadow-sm overflow-hidden"
           >
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <p>
@@ -114,18 +121,32 @@ export default function ExamSchedule() {
                 }`}
               >
                 
-                {/* Card Top: Badges */}
+                {/* Card Top: Date Badge & Dropdown Actions */}
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
                     <CalendarDays className="h-3 w-3" /> {exam.date}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider border ${
-                    exam.status === "Completed" 
-                      ? "bg-success/10 text-success border-success/20" 
-                      : "bg-primary/10 text-primary border-primary/20"
-                  }`}>
-                    {exam.status}
-                  </span>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <MoreVertical className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40 rounded-xl border-border bg-popover/95 backdrop-blur-md shadow-xl p-1.5">
+                      <DropdownMenuItem 
+                        onClick={() => handleEdit(exam.id)} 
+                        className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-muted-foreground focus:text-primary focus:bg-primary/10 rounded-lg py-2"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" /> Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-border/50 my-1" />
+                      <DropdownMenuItem 
+                        onClick={() => handleDelete(exam.id)} 
+                        className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-destructive focus:bg-destructive/10 focus:text-destructive rounded-lg py-2"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete Exam
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Card Middle: Title & Subject */}
@@ -145,20 +166,15 @@ export default function ExamSchedule() {
                   </div>
                 </div>
 
-                {/* Card Bottom: Actions */}
-                <div className="mt-5 flex items-center justify-end gap-2 pt-4 border-t border-border">
-                  <button
-                    onClick={() => handleEdit(exam.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exam.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
+                {/* Card Bottom: Status Badge */}
+                <div className="mt-3 pt-4 border-t border-border/60">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[9px] font-bold uppercase tracking-wider border ${
+                    exam.status === "Completed" 
+                      ? "bg-success/10 text-success border-success/20" 
+                      : "bg-primary/10 text-primary border-primary/20"
+                  }`}>
+                    {exam.status}
+                  </span>
                 </div>
 
               </motion.div>
