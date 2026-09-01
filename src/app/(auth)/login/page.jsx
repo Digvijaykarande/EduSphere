@@ -1,27 +1,55 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { GraduationCap, Lock, Mail, ArrowRight, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  GraduationCap,
+  Lock,
+  Mail,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  CheckCircle,
+} from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const login = useAuthStore((s) => s.login);
+
+  const fromPath = searchParams.get("from") || "/dashboard";
+
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState("student"); // 'student' | 'parent' | 'admin'
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError("");
+    setSuccessMsg("");
     setIsLoading(true);
 
-    // Simulate authentication delay
+    const result = await login({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    setIsLoading(false);
+
+    if (!result.success) {
+      setFormError(result.error || "Invalid email or password.");
+      return;
+    }
+
+    setSuccessMsg("Authentication successful! Redirecting to dashboard...");
     setTimeout(() => {
-      setIsLoading(false);
-      // Redirect to dashboard after login
-      router.push("/dashboard");
-    }, 1200);
+      router.replace(fromPath);
+    }, 400);
   };
 
   return (
@@ -39,15 +67,15 @@ export default function LoginPage() {
             </div>
             <div className="text-left">
               <span className="block font-display text-xl font-bold tracking-tight text-white">
-                Everest
+                EduSphere
               </span>
               <span className="block text-[11px] font-semibold tracking-widest text-gold uppercase -mt-1">
-                Global School
+                Institutional SaaS
               </span>
             </div>
           </Link>
           <h1 className="text-2xl font-display font-bold text-white tracking-tight">
-            Portal Access
+            Portal Login
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             Log in to manage your academic profile & dashboard
@@ -56,45 +84,32 @@ export default function LoginPage() {
 
         {/* Card Wrapper */}
         <div className="bg-white rounded-2xl p-8 shadow-2xl border border-slate-100">
-          
-          {/* Role Switcher Tabs */}
-          <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl mb-6 text-xs font-semibold">
-            {[
-              { id: "student", label: "Student" },
-              { id: "parent", label: "Parent" },
-              { id: "admin", label: "Admin" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setRole(tab.id)}
-                className={`py-2 rounded-lg transition-all duration-200 capitalize ${
-                  role === tab.id
-                    ? "bg-white text-primary shadow-sm font-bold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {formError && (
+            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-3.5 py-2.5 text-xs font-medium text-red-600 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              {formError}
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs font-medium text-emerald-700 flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
+              {successMsg}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email / ID Input */}
+            {/* Email / alias Input */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                {role === "admin" ? "Admin Email" : "User ID / Email"}
+                Login ID or personal email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  type="text"
+                  type="email"
                   required
-                  placeholder={
-                    role === "admin"
-                      ? "admin@everestschool.edu.in"
-                      : "STU-10492 or email"
-                  }
+                  placeholder="edna.krabappel.a3f9k1b4@edusphere.app"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -102,6 +117,9 @@ export default function LoginPage() {
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-primary focus:bg-white transition-all"
                 />
               </div>
+              <p className="mt-1.5 text-[11px] text-slate-500 leading-relaxed">
+                Use the alias we emailed you, or your personal / parent email.
+              </p>
             </div>
 
             {/* Password Input */}
@@ -111,7 +129,7 @@ export default function LoginPage() {
                   Password
                 </label>
                 <Link
-                  href="#"
+                  href="/forgot-password"
                   className="text-[11px] font-semibold text-primary hover:underline"
                 >
                   Forgot?
@@ -143,23 +161,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me Checkbox */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="remember"
-                className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-600 font-medium cursor-pointer">
-                Keep me logged in for this session
-              </label>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#0f1a3a] text-white font-bold text-xs py-3.5 px-4 rounded-xl hover:bg-primary transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-70 mt-2"
+              className="w-full bg-[#0f1a3a] text-white font-bold text-xs py-3.5 px-4 rounded-xl hover:bg-primary transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-70 mt-2 cursor-pointer"
             >
               {isLoading ? (
                 <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -171,15 +177,22 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-          {/* sign up links */}
-          <div>
-            <Link href="/register" className="block text-center text-xs text-lab(1 0 0) hover:text-primary mt-4">
-              Don't have an account? <span className="font-bold text-primary">Sign Up</span>
-            </Link>
+
+          {/* Sign Up Link */}
+          <div className="mt-5 pt-4 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500">
+              Want to register your school institution?{" "}
+              <Link
+                href="/register"
+                className="font-bold text-primary hover:underline"
+              >
+                Register School
+              </Link>
+            </p>
           </div>
 
           {/* Footer Note */}
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+          <div className="mt-4 pt-4 border-t border-slate-100 text-center">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
               256-Bit Encrypted Institutional Access
@@ -195,9 +208,22 @@ export default function LoginPage() {
           >
             ← Back to Main Website
           </Link>
-
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0b1226] flex items-center justify-center p-4">
+          <span className="h-8 w-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

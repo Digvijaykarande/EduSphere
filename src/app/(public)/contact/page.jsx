@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import PageTransition from "@/components/shared/PageTransition";
-import { ContactHero } from "@/components/pages/contact/ContactHero";
-import { InfoCards } from "@/components/pages/contact/InfoCards";
-import { DigitalForm } from "@/components/pages/contact/DigitalForm";
-import { LocationMap } from "@/components/pages/contact/LocationMap";
+import PageTransition from "@/components/common/PageTransition";
+import { ContactHero } from "@/components/pages/(public)/contact/ContactHero";
+import { InfoCards } from "@/components/pages/(public)/contact/InfoCards";
+import { DigitalForm } from "@/components/pages/(public)/contact/DigitalForm";
+import { LocationMap } from "@/components/pages/(public)/contact/LocationMap";
 
 export default function ContactPage() {
   return (

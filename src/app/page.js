@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-import PageLoader from "@/components/pages/homePage/PageLoader";
-import Navbar from "@/components/pages/demo/Navbar";
-import Hero from "@/components/pages/homePage/Hero";
-import ClientsMarquee from "@/components/pages/homePage/ClientsMarquee";
-import ServicesSection from "@/components/pages/homePage/ServicesSection";
-import FeaturesGrid from "@/components/pages/homePage/FeaturesGrid";
-import StatsCounter from "@/components/pages/homePage/StatsCounter";
-import Testimonials from "@/components/pages/homePage/Testimonials";
-import CTABanner from "@/components/pages/homePage/CTABanner";
-import Footer from "@/components/pages/demo/Footer";
+import PageLoader from "@/components/pages/(public)/homePage/PageLoader";
+import Navbar from "@/components/pages/(public)/demo/Navbar";
+import Hero from "@/components/pages/(public)/homePage/Hero";
+import ClientsMarquee from "@/components/pages/(public)/homePage/ClientsMarquee";
+import ServicesSection from "@/components/pages/(public)/homePage/ServicesSection";
+import FeaturesGrid from "@/components/pages/(public)/homePage/FeaturesGrid";
+import StatsCounter from "@/components/pages/(public)/homePage/StatsCounter";
+import Testimonials from "@/components/pages/(public)/homePage/Testimonials";
+import CTABanner from "@/components/pages/(public)/homePage/CTABanner";
+import Footer from "@/components/pages/(public)/demo/Footer";
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);

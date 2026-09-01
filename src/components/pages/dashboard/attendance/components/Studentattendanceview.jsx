@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { useAuthStore } from "@/store/use-auth-store";
+import React, { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 import { useLeaveStore } from "@/store/use-leave-store";
+import { useAttendanceStore } from "@/store/useAttendanceStore";
 import LeaveApplyForm from "./Leaveapplyform";
 import {
   TrendingUp,
@@ -11,127 +12,268 @@ import {
   Clock,
   CalendarDays,
   FileText,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
+  ChevronLeft,
+  ChevronRight,
+  HelpCircle,
+  XCircle,
+  History,
 } from "lucide-react";
 
+const RECORD_STATUS_META = {
+  present: {
+    label: "Present",
+    icon: CheckCircle2,
+    className:
+      "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
+  },
+  absent: {
+    label: "Absent",
+    icon: XCircle,
+    className:
+      "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20",
+  },
+  late: {
+    label: "Late",
+    icon: Clock,
+    className:
+      "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
+  },
+  "not-marked": {
+    label: "Not Marked",
+    icon: HelpCircle,
+    className:
+      "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
+  },
+};
+
+function RecordStatusPill({ status }) {
+  const meta = RECORD_STATUS_META[status] || RECORD_STATUS_META["not-marked"];
+  const Icon = meta.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${meta.className}`}
+    >
+      <Icon size={11} strokeWidth={2.5} />
+      {meta.label}
+    </span>
+  );
+}
+
+function formatRecordDate(d) {
+  return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// Full attendance record history, styled after FeesTable (StudentAvatar-less
+// since this is the student's own single-row-per-period history, not a
+// per-student roster).
+function AttendanceHistoryTable({ records }) {
+  const [page, setPage] = useState(1);
+  const perPage = 10;
+  const totalPages = Math.ceil(records.length / perPage) || 1;
+  const paginated = records.slice((page - 1) * perPage, page * perPage);
+
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+      <div className="px-5 py-4 border-b border-slate-200/60 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2.5">
+          <History size={16} className="text-indigo-500" />
+          Attendance History
+        </h3>
+        <span className="text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-md uppercase tracking-wider">
+          {records.length} Records
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        {records.length === 0 ? (
+          <div className="flex flex-col items-center justify-center text-center py-16">
+            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+              <CalendarDays size={20} className="text-slate-400" />
+            </div>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No attendance records yet</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Your attendance history will appear here once classes are marked.
+            </p>
+          </div>
+        ) : (
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="border-b border-slate-200 dark:border-slate-800">
+                <th className="py-4 px-5">Date</th>
+                <th className="py-4 px-3">Subject</th>
+                <th className="py-4 px-3">Period</th>
+                <th className="py-4 px-5 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
+              {paginated.map((r) => (
+                <tr key={r._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="py-3 px-5 font-bold text-slate-900 dark:text-slate-100 text-xs">
+                    {formatRecordDate(r.date)}
+                  </td>
+                  <td className="py-3 px-3 text-xs">{r.subject}</td>
+                  <td className="py-3 px-3 text-xs text-slate-500">{r.period}</td>
+                  <td className="py-3 px-5 text-right">
+                    <RecordStatusPill status={r.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {records.length > perPage && (
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/40 mt-auto">
+          <span className="text-xs text-slate-500 font-medium">
+            Showing {(page - 1) * perPage + 1} to {Math.min(page * perPage, records.length)} of {records.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-xs font-bold px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
+              {page} / {totalPages}
+            </span>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Accent palette shared with the compact stat-card style used on the
+// Principal dashboard — keeps the visual language consistent across roles.
+const ACCENTS = {
+  indigo: {
+    icon: "text-indigo-600 dark:text-indigo-400",
+    iconBg: "bg-indigo-50 dark:bg-indigo-500/15",
+    bar: "bg-indigo-500",
+  },
+  emerald: {
+    icon: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-50 dark:bg-emerald-500/15",
+    bar: "bg-emerald-500",
+  },
+  rose: {
+    icon: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-rose-50 dark:bg-rose-500/15",
+    bar: "bg-rose-500",
+  },
+  amber: {
+    icon: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-50 dark:bg-amber-500/15",
+    bar: "bg-amber-500",
+  },
+};
+
 export default function StudentAttendanceView() {
-  const user = useAuthStore((s) => s.user) || {
-    name: "Mayur Mehta",
-    role: "Student",
-    section: "10-A",
-  };
-  const submitStudentLeave = useLeaveStore((s) => s.submitStudentLeave);
+  const user = useAuthStore((s) => s.user);
+  const myLeaves = useLeaveStore((s) => s.myLeaves);
+  const fetchMyLeaves = useLeaveStore((s) => s.fetchMyLeaves);
+  const submitLeave = useLeaveStore((s) => s.submitLeave);
 
-  const rawStudentLeaves = useLeaveStore((s) => s.studentLeaves);
-  const myLeaves = useMemo(() => {
-    return rawStudentLeaves.filter((r) => r.name === user.name);
-  }, [rawStudentLeaves, user.name]);
+  const studentHistory = useAttendanceStore((s) => s.studentHistory);
+  const fetchMyAttendance = useAttendanceStore((s) => s.fetchMyAttendance);
 
-  // Enhanced stats array with semantic trend types for dynamic styling
+  useEffect(() => {
+    if (user) {
+      fetchMyLeaves();
+      fetchMyAttendance();
+    }
+  }, [user, fetchMyLeaves, fetchMyAttendance]);
+
+  if (!user) {
+    return <p className="text-sm text-slate-500">Loading…</p>;
+  }
+
+  async function handleSubmitLeave(payload) {
+    // LeaveApplyForm calls onSubmit({ name, role, section, from, to, reason })
+    // — the store only needs from/to/reason; identity is resolved
+    // server-side from the auth cookie.
+    await submitLeave(payload);
+  }
+
+  const s = studentHistory?.stats;
+
+  // Real stats from /api/attendance/mine (see attendance.service.js ->
+  // getMyAttendanceHistory). No fabricated "+2% this month" comparison —
+  // there's no prior-period endpoint yet, so trend text stays factual.
   const stats = [
     {
       label: "Overall Attendance",
-      value: "88%",
+      value: s ? `${s.attendancePct}%` : "—",
       icon: TrendingUp,
-      color: "text-indigo-600 dark:text-indigo-400",
-      bg: "bg-indigo-50 dark:bg-indigo-500/10",
-      glow: "bg-indigo-500",
-      trend: "+2% this month",
-      trendType: "positive",
+      accent: "indigo",
+      trend: s ? `${s.total} periods recorded` : "",
     },
     {
       label: "Days Present",
-      value: "42",
+      value: s ? String(s.present) : "—",
       icon: CheckCircle2,
-      color: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-50 dark:bg-emerald-500/10",
-      glow: "bg-emerald-500",
+      accent: "emerald",
       trend: "Consistent",
-      trendType: "positive",
     },
     {
       label: "Days Absent",
-      value: "4",
+      value: s ? String(s.absent) : "—",
       icon: AlertCircle,
-      color: "text-rose-600 dark:text-rose-400",
-      bg: "bg-rose-50 dark:bg-rose-500/10",
-      glow: "bg-rose-500",
-      trend: "Needs attention",
-      trendType: "negative",
+      accent: "rose",
+      trend: s && s.absent > 0 ? "Needs attention" : "On track",
     },
     {
       label: "Days Late",
-      value: "2",
+      value: s ? String(s.late) : "—",
       icon: Clock,
-      color: "text-amber-600 dark:text-amber-400",
-      bg: "bg-amber-50 dark:bg-amber-500/10",
-      glow: "bg-amber-500",
+      accent: "amber",
       trend: "Mostly on time",
-      trendType: "neutral",
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Modern SaaS-Style Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat, i) => (
-          <div
-            key={i}
-            className="relative bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group"
-          >
-            {/* Atmospheric Background Glow */}
+      {/* Compact Stats Row — matches PrincipalAttendanceView design */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map((stat, i) => {
+          const a = ACCENTS[stat.accent];
+          return (
             <div
-              className={`absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 dark:opacity-0 dark:group-hover:opacity-20 blur-3xl transition-all duration-500 pointer-events-none ${stat.glow}`}
-            />
-
-            {/* Header: Icon & Label */}
-            <div className="flex items-center gap-3 mb-4 relative z-10">
-              <div
-                className={`flex items-center justify-center w-10 h-10 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-105 transition-transform duration-300`}
-              >
-                <stat.icon size={20} strokeWidth={2.5} />
+              key={i}
+              className="relative flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-xl pl-4 pr-3 py-3 overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+            >
+              <span className={`absolute left-0 top-0 bottom-0 w-1 ${a.bar}`} />
+              <div className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${a.iconBg} ${a.icon}`}>
+                <stat.icon size={17} strokeWidth={2.5} />
               </div>
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                {stat.label}
-              </span>
-            </div>
-
-            {/* Body: Metric Value */}
-            <div className="relative z-10 mb-4">
-              <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {stat.value}
-              </span>
-            </div>
-
-            {/* Footer: Dynamic Trend Pill */}
-            <div className="relative z-10 flex items-center">
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
-                  stat.trendType === "positive"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                    : stat.trendType === "negative"
-                      ? "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                      : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                }`}
-              >
-                {stat.trendType === "positive" && (
-                  <ArrowUpRight size={12} strokeWidth={3} />
+              <div className="min-w-0">
+                <p className="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
+                  {stat.value}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1.5 truncate">
+                  {stat.label}
+                </p>
+                {stat.trend && (
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{stat.trend}</p>
                 )}
-                {stat.trendType === "negative" && (
-                  <ArrowDownRight size={12} strokeWidth={3} />
-                )}
-                {stat.trendType === "neutral" && (
-                  <Minus size={12} strokeWidth={3} />
-                )}
-                {stat.trend}
-              </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Full attendance record history — every marked period, paginated */}
+      <AttendanceHistoryTable records={studentHistory?.records || []} />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column: Form */}
@@ -140,7 +282,7 @@ export default function StudentAttendanceView() {
             applicantName={user.name}
             applicantMeta={{ role: "Student", section: user.section || "10-A" }}
             submittedTo="your class teacher"
-            onSubmit={submitStudentLeave}
+            onSubmit={handleSubmitLeave}
           />
         </div>
 

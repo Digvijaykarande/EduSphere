@@ -12,7 +12,9 @@ export default function SeatGrid({ students, onCycle, query = "" }) {
       {students.map((s) => {
         const dim = q && !s.name.toLowerCase().includes(q) && !String(s.rollNo).includes(q);
         const meta = STATUS_META[s.status];
-        
+        const overallPct = s.overall ? parseFloat(s.overall) : null;
+        const isWarning = overallPct !== null && overallPct < 75;
+
         return (
           // Wrapped the button in a relative group to anchor the custom tooltip
           <div key={s.id} className="relative group">
@@ -36,6 +38,16 @@ export default function SeatGrid({ students, onCycle, query = "" }) {
                   <p className="text-[10px] text-slate-500 dark:text-slate-400">Roll No: {s.rollNo}</p>
                 </div>
               </div>
+
+              {/* Term-to-date attendance %, when available */}
+              {s.overall && (
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Term Attendance</span>
+                  <span className={`text-[10px] font-bold ${isWarning ? "text-rose-500" : "text-slate-600 dark:text-slate-300"}`}>
+                    {s.overall} {isWarning && "⚠️"}
+                  </span>
+                </div>
+              )}
               
               {/* Status Indicator */}
               <div className="flex items-center justify-between">

@@ -1,8 +1,8 @@
 "use client";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { getInitials } from "@/lib/formatCurrency";
 
 // ------------------------------------------------------------------
@@ -30,50 +30,72 @@ const STATUS_STYLES = {
 
 export function StatusBadge({ status }) {
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${
+    <Badge
+      variant="outline"
+      className={`px-2.5 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap ${
         STATUS_STYLES[status] || STATUS_STYLES.Pending
       }`}
     >
       {status}
-    </span>
+    </Badge>
   );
 }
 
 // ------------------------------------------------------------------
-// 3. STAT CARD COMPONENT (Ultra-Minimalist & Modern)
+// 3. STAT CARD COMPONENT — matches the Attendance dashboard KPI style:
+//    a colored left accent bar, a small tinted icon square, a bold
+//    number on top, an uppercase label, and a muted subtext line.
 // ------------------------------------------------------------------
-export function StatCard({ label, value, change, trend, icon: Icon }) {
-  const isPositive = trend === "up";
-  const TrendIcon = isPositive ? ArrowUpRight : ArrowDownRight;
-  
-  // Clean, soft text colors for the trend indicator
-  const trendColorClass = isPositive 
-    ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" 
-    : "text-rose-600 dark:text-rose-400 bg-rose-500/10";
+const STAT_TONES = {
+  violet: {
+    bar: "bg-violet-500",
+    iconBg: "bg-violet-50 dark:bg-violet-500/10",
+    iconText: "text-violet-600 dark:text-violet-400",
+  },
+  blue: {
+    bar: "bg-indigo-500",
+    iconBg: "bg-indigo-50 dark:bg-indigo-500/10",
+    iconText: "text-indigo-600 dark:text-indigo-400",
+  },
+  green: {
+    bar: "bg-emerald-500",
+    iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
+    iconText: "text-emerald-600 dark:text-emerald-400",
+  },
+  orange: {
+    bar: "bg-amber-500",
+    iconBg: "bg-amber-50 dark:bg-amber-500/10",
+    iconText: "text-amber-600 dark:text-amber-400",
+  },
+};
+
+export function StatCard({ label, value, change, icon: Icon, tone = "violet" }) {
+  const t = STAT_TONES[tone] || STAT_TONES.violet;
 
   return (
-    <Card className="flex flex-col justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm hover:shadow-md transition-shadow h-[115px]">
-      
-      {/* Top Label & Tiny Accent Icon */}
-      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mb-3">
-        {Icon && <Icon className="h-4 w-4 stroke-[2px]" />}
-        <p className="text-xs font-semibold uppercase tracking-wider">{label}</p>
-      </div>
+    <Card className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 shadow-sm">
+      {/* Left accent bar */}
+      <span className={`absolute left-0 top-0 h-full w-1 ${t.bar}`} />
 
-      {/* Main Big Value */}
-      <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-3">
-        {value}
-      </h3>
+      <div className="flex items-start gap-3 py-4 pl-5 pr-4">
+        {Icon && (
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconText}`}>
+            <Icon className="h-4.5 w-4.5" strokeWidth={2} />
+          </span>
+        )}
 
-      {/* Bottom Subtle Trend */}
-      <div className="mt-auto flex items-center">
-        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-bold ${trendColorClass}`}>
-          <TrendIcon className="h-3.5 w-3.5 mr-0.5" strokeWidth={2.5} />
-          {change}
-        </span>
+        <div className="min-w-0">
+          <h3 className="text-2xl font-bold leading-none tracking-tight text-slate-900 dark:text-white">
+            {value}
+          </h3>
+          <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+          {change ? (
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500 truncate">{change}</p>
+          ) : null}
+        </div>
       </div>
-      
     </Card>
   );
 }

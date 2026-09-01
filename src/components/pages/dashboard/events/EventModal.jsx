@@ -14,13 +14,16 @@ import {
   Calendar as CalendarIcon,
   Check,
 } from "lucide-react";
-// Added formatShort to the imports below
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   CATEGORY_LIST,
   CATEGORY_META,
   toKey,
   formatDayLabel,
   formatShort,
+  getCategoryLabel,
 } from "./events.utils";
 
 export default function EventModal({
@@ -32,6 +35,8 @@ export default function EventModal({
   draft,
   setDraft,
   onSelectDate,
+  canManage,
+  saving,
 }) {
   const [activeDate, setActiveDate] = useState(modalDate);
   const [viewStartDate, setViewStartDate] = useState(modalDate);
@@ -89,7 +94,6 @@ export default function EventModal({
     <AnimatePresence>
       {modalDate && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -98,7 +102,6 @@ export default function EventModal({
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40"
           />
 
-          {/* Modal Container */}
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -106,9 +109,7 @@ export default function EventModal({
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6"
           >
-            {/* Split Card Layout */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 dark:border-slate-800 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row relative">
-              {/* Absolute Close Button */}
               <button
                 onClick={closeModal}
                 className="absolute top-3 right-4 p-2 bg-slate-100/80 dark:bg-slate-800/80 rounded-full text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-20 backdrop-blur-sm"
@@ -116,11 +117,7 @@ export default function EventModal({
                 <X size={16} strokeWidth={2.5} />
               </button>
 
-              {/* =========================================
-                  PANEL 1: DATE NAV & EVENT CREATION FORM 
-                  ========================================= */}
               <div className="w-full md:w-1/2 flex flex-col border-r border-slate-100 dark:border-slate-800 overflow-y-auto no-scrollbar">
-                {/* Header & Hidden Date Picker */}
                 <div className="px-6 pt-4 pb-4">
                   <p className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-1">
                     Schedule Event
@@ -149,16 +146,17 @@ export default function EventModal({
                   </div>
                 </div>
 
-                {/* Rolling Date Selector */}
                 <div className="px-4 pb-6">
                   <div className="bg-slate-50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-1">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => shiftWeek(-1)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all shadow-sm shadow-transparent hover:shadow-slate-200 dark:hover:shadow-none"
+                      className="h-8 w-8"
                     >
                       <ChevronLeft size={18} />
-                    </button>
+                    </Button>
 
                     <div className="flex-1 flex items-center justify-between gap-1">
                       {datePills.map((pillDate) => {
@@ -193,201 +191,207 @@ export default function EventModal({
                       })}
                     </div>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => shiftWeek(1)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all shadow-sm shadow-transparent hover:shadow-slate-200 dark:hover:shadow-none"
+                      className="h-8 w-8"
                     >
                       <ChevronRight size={18} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
-                {/* Event Creation Form */}
-                <form
-                  onSubmit={handleAddEvent}
-                  className="px-6 pb-6 space-y-3 flex-1 flex flex-col"
-                >
-                  <input
-                    type="hidden"
-                    name="activeEventDate"
-                    value={formatInputDate(activeDate)}
-                  />
-
-                  <div>
-                    <label className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block">
-                      Event Title
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={draft.title}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, title: e.target.value }))
-                      }
-                      placeholder="e.g., Annual Science Fair"
-                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2.5 px-3.5 text-sm placeholder:text-slate-400 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    />
+                {!canManage ? (
+                  <div className="px-6 pb-6 flex-1 flex flex-col items-start justify-center">
+                    <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      View only
+                    </p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      Only principals and teachers can add or remove events.
+                    </p>
                   </div>
+                ) : (
+                  <form
+                    onSubmit={handleAddEvent}
+                    className="px-6 pb-6 space-y-3 flex-1 flex flex-col"
+                  >
+                    <input
+                      type="hidden"
+                      name="activeEventDate"
+                      value={formatInputDate(activeDate)}
+                    />
 
-                  {/* Modern Custom Category Dropdown */}
-                  <div className="relative z-30">
-                    <label className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block">
-                      Category
-                    </label>
-
-                    {/* Trigger Button */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
-                      }
-                      className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2.5 px-3.5 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <span className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-100 font-medium">
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{
-                            background: CATEGORY_META[draft.category]?.dot,
-                          }}
-                        />
-                        {draft.category}
-                      </span>
-                      <ChevronDown
-                        size={16}
-                        className={`text-slate-400 transition-transform ${isCategoryDropdownOpen ? "rotate-180" : ""}`}
+                    <div className="space-y-1">
+                      <Label htmlFor="ev-title">Event Title</Label>
+                      <Input
+                        id="ev-title"
+                        type="text"
+                        required
+                        value={draft.title}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, title: e.target.value }))
+                        }
+                        placeholder="e.g., Annual Science Fair"
                       />
-                    </button>
+                    </div>
 
-                    {/* Popover Menu */}
-                    <AnimatePresence>
-                      {isCategoryDropdownOpen && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setIsCategoryDropdownOpen(false)}
+                    <div className="relative z-30 space-y-1">
+                      <Label>Category</Label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
+                        }
+                        className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2.5 px-3.5 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      >
+                        <span className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-100 font-medium">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{
+                              background: CATEGORY_META[draft.category]?.dot,
+                            }}
                           />
-                          <motion.div
-                            initial={{ opacity: 0, y: -5, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -5, scale: 0.98 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 overflow-hidden"
-                          >
-                            {CATEGORY_LIST.map((cat) => {
-                              const isSelected = draft.category === cat;
-                              return (
-                                <button
-                                  key={cat}
-                                  type="button"
-                                  onClick={() =>
-                                    handleCustomCategorySelect(cat)
-                                  }
-                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                                    isSelected
-                                      ? "bg-slate-50 dark:bg-slate-700/50"
-                                      : "hover:bg-slate-50 dark:hover:bg-slate-700/30"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className="h-2.5 w-2.5 rounded-full"
-                                      style={{
-                                        background: CATEGORY_META[cat]?.dot,
-                                      }}
-                                    />
-                                    <span
-                                      className={`font-medium ${isSelected ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
-                                    >
-                                      {cat}
-                                    </span>
-                                  </div>
-                                  {isSelected && (
-                                    <Check
-                                      size={14}
-                                      className="text-indigo-600 dark:text-indigo-400"
-                                    />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                          {draft.category}
+                        </span>
+                        <ChevronDown
+                          size={16}
+                          className={`text-slate-400 transition-transform ${isCategoryDropdownOpen ? "rotate-180" : ""}`}
+                        />
+                      </button>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block">
-                        Start Time
-                      </label>
-                      <input
+                      <AnimatePresence>
+                        {isCategoryDropdownOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setIsCategoryDropdownOpen(false)}
+                            />
+                            <motion.div
+                              initial={{ opacity: 0, y: -5, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -5, scale: 0.98 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 overflow-hidden"
+                            >
+                              {CATEGORY_LIST.map((cat) => {
+                                const isSelected = draft.category === cat;
+                                return (
+                                  <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() =>
+                                      handleCustomCategorySelect(cat)
+                                    }
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
+                                      isSelected
+                                        ? "bg-slate-50 dark:bg-slate-700/50"
+                                        : "hover:bg-slate-50 dark:hover:bg-slate-700/30"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className="h-2.5 w-2.5 rounded-full"
+                                        style={{
+                                          background: CATEGORY_META[cat]?.dot,
+                                        }}
+                                      />
+                                      <span
+                                        className={`font-medium ${isSelected ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
+                                      >
+                                        {cat}
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <Check
+                                        size={14}
+                                        className="text-indigo-600 dark:text-indigo-400"
+                                      />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {draft.category === "Other" && (
+                      <div className="space-y-1">
+                        <Label htmlFor="ev-custom">Custom label</Label>
+                        <Input
+                          id="ev-custom"
+                          type="text"
+                          value={draft.customCategoryLabel}
+                          onChange={(e) =>
+                            setDraft((d) => ({
+                              ...d,
+                              customCategoryLabel: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g., Field Trip"
+                          maxLength={60}
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="ev-start">Start Time</Label>
+                        <Input
+                          id="ev-start"
+                          type="text"
+                          value={draft.start}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, start: e.target.value }))
+                          }
+                          placeholder="10:00 AM"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="ev-end">End Time</Label>
+                        <Input
+                          id="ev-end"
+                          type="text"
+                          value={draft.end}
+                          onChange={(e) =>
+                            setDraft((d) => ({ ...d, end: e.target.value }))
+                          }
+                          placeholder="Optional"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="ev-loc">Location</Label>
+                      <Input
+                        id="ev-loc"
                         type="text"
-                        value={draft.start}
+                        value={draft.location}
                         onChange={(e) =>
-                          setDraft((d) => ({ ...d, start: e.target.value }))
+                          setDraft((d) => ({ ...d, location: e.target.value }))
                         }
-                        placeholder="10:00 AM"
-                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2 px-3.5 text-sm placeholder:text-slate-400 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        placeholder="e.g., Main Auditorium"
                       />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block">
-                        End Time
-                      </label>
-                      <input
-                        type="text"
-                        value={draft.end}
-                        onChange={(e) =>
-                          setDraft((d) => ({ ...d, end: e.target.value }))
-                        }
-                        placeholder="Optional"
-                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2.5 px-3.5 text-sm placeholder:text-slate-400 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                      />
+
+                    <div className="pt-4 mt-auto">
+                      <Button
+                        type="submit"
+                        disabled={saving}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                      >
+                        <Plus size={16} strokeWidth={2.5} className="mr-1.5" />
+                        {saving ? "Saving…" : "Add to Schedule"}
+                      </Button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block">
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      value={draft.location}
-                      onChange={(e) =>
-                        setDraft((d) => ({ ...d, location: e.target.value }))
-                      }
-                      placeholder="e.g., Main Auditorium"
-                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 rounded-xl py-2.5 px-3.5 text-sm placeholder:text-slate-400 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                    />
-                  </div>
-
-                  <div className="pt-4 mt-auto">
-                    <button
-                      type="submit"
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98]"
-                    >
-                      <Plus size={16} strokeWidth={2.5} /> Add to Schedule
-                    </button>
-                  </div>
-                </form>
+                  </form>
+                )}
               </div>
 
-              {/* =========================================
-                  PANEL 2: ACTIVE AGENDA / EVENT LIST
-                  ========================================= */}
               <div className="w-full md:w-1/2 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col h-[400px] md:h-auto border-t md:border-t-0 border-slate-100 dark:border-slate-800 relative">
-                {/* Subtle Background Pattern (Optional styling touch) */}
-                <div
-                  className="absolute inset-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(#000 1px, transparent 1px)",
-                    backgroundSize: "16px 16px",
-                  }}
-                />
-
                 <div className="px-6 py-6 border-b border-slate-150 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
                   <h3 className="text-base font-display font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                     <CalendarIcon size={18} className="text-indigo-500" />
@@ -419,7 +423,6 @@ export default function EventModal({
                         animate={{ opacity: 1, y: 0 }}
                         className="group flex items-start gap-3 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                       >
-                        {/* Dynamic Category Color Edge */}
                         <div
                           className="absolute left-0 top-0 bottom-0 w-1.5"
                           style={{
@@ -437,7 +440,7 @@ export default function EventModal({
                                 color: CATEGORY_META[ev.category]?.text,
                               }}
                             >
-                              {ev.category}
+                              {getCategoryLabel(ev)}
                             </span>
                           </div>
 
@@ -460,13 +463,17 @@ export default function EventModal({
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => deleteEvent(ev.id)}
-                          className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                          title="Delete Event"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {canManage && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteEvent(ev.id)}
+                            className="h-8 w-8 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Delete Event"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
                       </motion.div>
                     ))
                   )}

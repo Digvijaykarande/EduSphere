@@ -150,7 +150,7 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 pb-12">
+    <div className="max-w-[1500px] mx-auto pb-4">
       <SupportHeader setCreateOpen={setCreateOpen} />
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6 items-start">

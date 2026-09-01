@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import { AboutHero } from "@/components/pages/about/AboutHero";
-import { MissionVision } from "@/components/pages/about/MissionVision";
-import { CampusTour } from "@/components/pages/about/CampusTour";
-import { CoreValues } from "@/components/pages/about/CoreValues";
-import { Timeline } from "@/components/pages/about/Timeline";
-import { Leadership } from "@/components/pages/about/Leadership";
-import { AdmissionsCta } from "@/components/pages/about/AdmissionsCta";
+import { AboutHero } from "@/components/pages/(public)/about/AboutHero";
+import { MissionVision } from "@/components/pages/(public)/about/MissionVision";
+import { CampusTour } from "@/components/pages/(public)/about/CampusTour";
+import { CoreValues } from "@/components/pages/(public)/about/CoreValues";
+import { Timeline } from "@/components/pages/(public)/about/Timeline";
+import { Leadership } from "@/components/pages/(public)/about/Leadership";
+import { AdmissionsCta } from "@/components/pages/(public)/about/AdmissionsCta";
 
 export default function AboutPage() {
   return (

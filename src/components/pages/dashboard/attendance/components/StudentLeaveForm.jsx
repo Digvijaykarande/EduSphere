@@ -3,6 +3,10 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, Calendar, FileText, Send, User, Hash } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 export default function StudentLeaveForm() {
   const [status, setStatus] = useState("idle"); // "idle" | "submitting" | "success"
@@ -28,7 +32,6 @@ export default function StudentLeaveForm() {
     
     setStatus("submitting");
     
-    // Simulate a network request delay for UX
     setTimeout(() => {
       setStatus("success");
     }, 1500);
@@ -40,13 +43,11 @@ export default function StudentLeaveForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-3 flex flex-col h-full relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 flex flex-col h-full relative overflow-hidden">
       <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Leave Application</h3>
       
       <div className="relative flex-1 flex flex-col justify-center min-h-[325px]">
         <AnimatePresence mode="wait">
-          
-          {/* STATE 1: FORM ENTRY */}
           {status !== "success" && (
             <motion.form 
               key="form"
@@ -57,114 +58,115 @@ export default function StudentLeaveForm() {
               onSubmit={handleSubmit} 
               className="space-y-4"
             >
-              {/* Identity Row */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block tracking-wider">
+                <div className="space-y-1">
+                  <Label htmlFor="st-name" className="text-[10px] uppercase font-bold text-slate-400">
                     Student Name
-                  </label>
+                  </Label>
                   <div className="relative">
                     <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
+                    <Input 
+                      id="st-name"
                       type="text" 
                       required
                       disabled={status === "submitting"}
                       value={formData.studentName}
                       onChange={(e) => setFormData({...formData, studentName: e.target.value})}
                       placeholder="Full Name" 
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60" 
+                      className="pl-9"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block tracking-wider">
+                <div className="space-y-1">
+                  <Label htmlFor="st-roll" className="text-[10px] uppercase font-bold text-slate-400">
                     Roll No
-                  </label>
+                  </Label>
                   <div className="relative">
                     <Hash size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
+                    <Input 
+                      id="st-roll"
                       type="text" 
                       required
                       disabled={status === "submitting"}
                       value={formData.rollNo}
                       onChange={(e) => setFormData({...formData, rollNo: e.target.value})}
                       placeholder="e.g. 101" 
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60" 
+                      className="pl-9"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Date Range Row */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block tracking-wider">
+                <div className="space-y-1">
+                  <Label htmlFor="st-from" className="text-[10px] uppercase font-bold text-slate-400">
                     Date From
-                  </label>
+                  </Label>
                   <div className="relative">
                     <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input 
+                    <Input 
+                      id="st-from"
                       type="date" 
                       required
                       disabled={status === "submitting"}
                       value={formData.dateFrom}
                       onChange={(e) => setFormData({...formData, dateFrom: e.target.value})}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60 cursor-pointer" 
+                      className="pl-9"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block tracking-wider">
+                <div className="space-y-1">
+                  <Label htmlFor="st-to" className="text-[10px] uppercase font-bold text-slate-400">
                     Date To
-                  </label>
+                  </Label>
                   <div className="relative">
                     <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input 
+                    <Input 
+                      id="st-to"
                       type="date" 
                       required
                       disabled={status === "submitting"}
                       value={formData.dateTo}
                       onChange={(e) => setFormData({...formData, dateTo: e.target.value})}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all disabled:opacity-60 cursor-pointer" 
+                      className="pl-9"
                     />
                   </div>
                 </div>
               </div>
               
-              {/* Reason Field */}
-              <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400 dark:text-slate-500 mb-1.5 block tracking-wider">
+              <div className="space-y-1">
+                <Label htmlFor="st-reason" className="text-[10px] uppercase font-bold text-slate-400">
                   Reason
-                </label>
+                </Label>
                 <div className="relative">
                   <FileText size={14} className="absolute left-3 top-3 text-slate-400" />
-                  <textarea 
-                    rows="3" 
+                  <Textarea 
+                    id="st-reason"
+                    rows={3} 
                     required
                     disabled={status === "submitting"}
                     value={formData.reason}
                     onChange={(e) => setFormData({...formData, reason: e.target.value})}
                     placeholder="Brief explanation..." 
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all disabled:opacity-60"
+                    className="pl-9"
                   />
                 </div>
               </div>
               
-              <button 
+              <Button 
                 type="submit" 
                 disabled={status === "submitting"}
-                className="w-full bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-80 disabled:cursor-not-allowed shadow-sm shadow-slate-900/10 dark:shadow-indigo-600/20 active:scale-[0.98]"
+                className="w-full bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700"
               >
                 {status === "submitting" ? (
-                  <><Loader2 size={16} className="animate-spin" /> Submitting...</>
+                  <><Loader2 size={16} className="animate-spin mr-1.5" /> Submitting...</>
                 ) : (
-                  <><Send size={15} /> Submit Request</>
+                  <><Send size={15} className="mr-1.5" /> Submit Request</>
                 )}
-              </button>
+              </Button>
             </motion.form>
           )}
 
-          {/* STATE 2: SUCCESS RESULT */}
           {status === "success" && (
             <motion.div 
               key="success"
@@ -188,15 +190,15 @@ export default function StudentLeaveForm() {
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[200px] mb-6">
                 Your leave application has been sent to your class teacher for approval.
               </p>
-              <button 
+              <Button 
+                variant="secondary"
+                size="sm"
                 onClick={handleReset}
-                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 py-2 px-4 rounded-lg transition-colors cursor-pointer"
               >
                 Submit Another Request
-              </button>
+              </Button>
             </motion.div>
           )}
-          
         </AnimatePresence>
       </div>
     </div>

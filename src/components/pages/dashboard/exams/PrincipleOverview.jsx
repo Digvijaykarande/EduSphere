@@ -1,10 +1,9 @@
 // src/components/pages/dashboard/exams/PrincipalOverview.jsx
 "use client";
 
-import React from "react";
-import { BookOpen, Calendar, CheckSquare, TrendingUp, TrendingDown, Minus, FileText, Upload, Settings } from "lucide-react";
-import { stats, statsTrends, upcomingExams, topPerformers, recentResults } from "./mockData";
-import { PerformanceAreaChart, SubjectDonutChart } from "./ExamCharts";
+import React, { useEffect } from "react";
+import { BookOpen, Calendar, CheckSquare, TrendingUp, TrendingDown, Minus, FileText, Upload, Settings, Loader2 } from "lucide-react";
+import { useExamStore } from "@/store/examStore";
 
 const KPI_CARDS = [
   { key: "totalExams", label: "Total Exams" },
@@ -27,6 +26,27 @@ function TrendBadge({ trend }) {
 }
 
 export default function PrincipalOverview({ onNavigateTab, onCreateExam }) {
+  const stats = useExamStore((s) => s.stats);
+  const isLoadingStats = useExamStore((s) => s.isLoadingStats);
+  const fetchStats = useExamStore((s) => s.fetchStats);
+
+  const upcomingExams = useExamStore((s) => s.upcomingExams);
+  const fetchUpcomingExams = useExamStore((s) => s.fetchUpcomingExams);
+
+  const topPerformers = useExamStore((s) => s.topPerformers);
+  const fetchTopPerformers = useExamStore((s) => s.fetchTopPerformers);
+
+  const recentResults = useExamStore((s) => s.recentResults);
+  const fetchRecentResults = useExamStore((s) => s.fetchRecentResults);
+
+  useEffect(() => {
+    fetchStats().catch(() => {});
+    fetchUpcomingExams().catch(() => {});
+    fetchTopPerformers().catch(() => {});
+    fetchRecentResults().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const goTo = (tab) => {
     if (onNavigateTab) onNavigateTab(tab);
   };
@@ -38,23 +58,25 @@ export default function PrincipalOverview({ onNavigateTab, onCreateExam }) {
         {KPI_CARDS.map(({ key, label }) => (
           <div key={key} className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-colors">
             <p className="text-xs font-bold text-slate-400">{label}</p>
-            <h3 className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">{stats[key]}</h3>
-            <TrendBadge trend={statsTrends[key]} />
+            <h3 className="text-2xl font-bold mt-1 text-slate-900 dark:text-white">
+              {isLoadingStats && !stats ? "—" : stats?.[key] ?? "—"}
+            </h3>
+            {/* Backend doesn't compute term-over-term deltas yet — omitted rather than faked. */}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Upcoming Exams</h3>
-              <button onClick={() => goTo("Schedule")} className="text-xs text-primary font-bold hover:underline">View All</button>
-            </div>
-            <div className="space-y-4">
-              {upcomingExams.map(ex => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm">Upcoming Exams</h3>
+            <button onClick={() => goTo("Schedule")} className="text-xs text-primary font-bold hover:underline">View All</button>
+          </div>
+          <div className="space-y-4">
+            {upcomingExams.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No upcoming exams.</p>
+            ) : (
+              upcomingExams.map(ex => (
                 <div key={ex.id} className="flex gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><BookOpen size={18}/></div>
                   <div className="flex-1">
@@ -62,22 +84,27 @@ export default function PrincipalOverview({ onNavigateTab, onCreateExam }) {
                     <p className="text-[10px] text-slate-500">{ex.test}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-end gap-1"><Calendar size={10}/> {ex.date}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Class {ex.class}</p>
+                    <p className="text-[10px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-end gap-1">
+                      <Calendar size={10}/> {new Date(ex.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </p>
+                    {ex.class && <p className="text-[10px] text-slate-500 mt-0.5">Class {ex.class}</p>}
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
+        </div>
 
-           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Exam Top Performers</h3>
-            <div className="space-y-3">
-              {topPerformers.map(p => (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+          <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Exam Top Performers</h3>
+          <div className="space-y-3">
+            {topPerformers.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No published results yet.</p>
+            ) : (
+              topPerformers.map(p => (
                 <div key={p.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="w-5 text-center text-xs font-bold text-slate-400">{p.id}</span>
-                    <img src={p.avatar} alt={p.name} className="w-8 h-8 rounded-full" />
                     <div>
                       <p className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</p>
                       <p className="text-[10px] text-slate-500">Class {p.class}</p>
@@ -85,57 +112,44 @@ export default function PrincipalOverview({ onNavigateTab, onCreateExam }) {
                   </div>
                   <span className="text-xs font-bold text-emerald-500">{p.score}</span>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
         </div>
-
-        {/* Center & Right Column */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">Exam Performance Overview</h3>
-            <PerformanceAreaChart />
-            <div className="grid grid-cols-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-              <div><p className="text-[10px] text-slate-500 uppercase">Highest</p><p className="text-lg font-bold text-emerald-500">98%</p></div>
-              <div><p className="text-[10px] text-slate-500 uppercase">Lowest</p><p className="text-lg font-bold text-rose-500">45%</p></div>
-              <div><p className="text-[10px] text-slate-500 uppercase">Average</p><p className="text-lg font-bold text-primary">78.6%</p></div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Exam Wise Performance</h3>
-              <SubjectDonutChart />
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-900 dark:text-white text-sm">Recent Results</h3>
-                <button onClick={() => goTo("Results")} className="text-xs text-primary font-bold hover:underline">View All</button>
-              </div>
-              <div className="space-y-4">
-                {recentResults.map(r => (
-                  <div key={r.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
-                    <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">{r.test}</p>
-                      <p className="text-[10px] text-slate-500">{r.class} • {r.subject}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${r.status === 'Published' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                        {r.status}
-                      </span>
-                      <p className="text-[9px] text-slate-400 mt-1">{r.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* Quick Actions (Bottom Row) */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-slate-900 dark:text-white text-sm">Recent Results</h3>
+          <button onClick={() => goTo("Results")} className="text-xs text-primary font-bold hover:underline">View All</button>
+        </div>
+        <div className="space-y-4">
+          {isLoadingStats && recentResults.length === 0 ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</div>
+          ) : recentResults.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No results yet.</p>
+          ) : (
+            recentResults.map(r => (
+              <div key={r.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{r.test}</p>
+                  <p className="text-[10px] text-slate-500">{r.class} • {r.subject}</p>
+                </div>
+                <div className="text-right">
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${r.status === 'Published' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                    {r.status}
+                  </span>
+                  <p className="text-[9px] text-slate-400 mt-1">
+                    {new Date(r.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
         {[
           { label: "Create Exam", icon: Upload, desc: "Schedule a new exam", onClick: onCreateExam },

@@ -29,7 +29,7 @@ export default function NotificationsPanel({ notifications, onMarkAllRead, onMar
             </div>
           )}
           {notifications.map((n) => {
-            const meta = NOTIFICATION_META[n.type];
+            const meta = NOTIFICATION_META[n.type] || NOTIFICATION_META.system;
             const Icon = meta.icon;
             return (
               <button

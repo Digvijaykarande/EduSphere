@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import PageTransition from "@/components/shared/PageTransition";
-import { AchievementsHero } from "@/components/pages/achievements/AchievementsHero";
-import { ImpactMetrics } from "@/components/pages/achievements/ImpactMetrics";
-import { MajorAccolades } from "@/components/pages/achievements/MajorAccolades";
-import { StudentSpotlight } from "@/components/pages/achievements/StudentSpotlight";
-import { AchievementsCta } from "@/components/pages/achievements/AchievementsCta";
+import PageTransition from "@/components/common/PageTransition";
+import { AchievementsHero } from "@/components/pages/(public)/achievements/AchievementsHero";
+import { ImpactMetrics } from "@/components/pages/(public)/achievements/ImpactMetrics";
+import { MajorAccolades } from "@/components/pages/(public)/achievements/MajorAccolades";
+import { StudentSpotlight } from "@/components/pages/(public)/achievements/StudentSpotlight";
+import { AchievementsCta } from "@/components/pages/(public)/achievements/AchievementsCta";
 
 export default function AchievementsPage() {
   return (

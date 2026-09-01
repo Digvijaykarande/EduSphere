@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { useAuthStore } from "@/store/use-auth-store";
+import { useAuthStore } from "@/store/authStore";
 
 import ProfileHeader from "@/components/pages/dashboard/profile/ProfileHeader";
 import ProfileIdentity from "@/components/pages/dashboard/profile/ProfileIdentity";
@@ -12,18 +12,47 @@ import PasswordModal from "@/components/pages/dashboard/profile/PasswordModal";
 
 import { ROLE_META, ROLE_SEED_DATA } from "@/components/pages/dashboard/profile/profile.utils";
 
+// Backend roles are UPPERCASE (SUPER_ADMIN / SCHOOL / TEACHER / STUDENT); the
+// profile seed data is keyed by display label. Map so the badge + placeholder
+// meta resolve correctly instead of always falling through to "Principal".
+const ROLE_KEY_MAP = {
+  SUPER_ADMIN: "Super Admin",
+  SCHOOL: "Principal",
+  TEACHER: "Teacher",
+  STUDENT: "Teacher",
+};
+
 export default function ProfilePage() {
+  const authUser = useAuthStore((state) => state.user);
+
+  // While the store is hydrating, render a lightweight placeholder. Middleware
+  // guarantees the user is authed by the time we get here in production.
+  // NOTE: all stateful hooks live in <ProfileContent> so they only ever run
+  // with a valid user — calling them here (before this guard) would violate
+  // the Rules of Hooks the moment the store hydrates from null → user.
+  if (!authUser) {
+    return (
+      <div className="max-w-8xl mx-auto pb-16 pt-2">
+        <p className="text-sm text-slate-500">Loading…</p>
+      </div>
+    );
+  }
+
+  return <ProfileContent authUser={authUser} />;
+}
+
+function ProfileContent({ authUser }) {
   const fileInputRef = useRef(null);
-  
-  const authUser = useAuthStore((state) => state.user) || { name: "Admin User", role: "Super Admin" };
-  const role = ROLE_META[authUser.role] ? authUser.role : "Super Admin";
+  const changePassword = useAuthStore((state) => state.changePassword);
+
+  const role = ROLE_KEY_MAP[authUser.role] || "Principal";
   const seed = ROLE_SEED_DATA[role];
   const meta = ROLE_META[role];
 
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [form, setForm] = useState({
-    fullName: seed.fullName,
-    email: seed.email,
+    fullName: authUser.name || seed.fullName,
+    email: authUser.contactEmail || authUser.email || seed.email,
     phone: seed.phone,
     address: seed.address,
     bio: seed.bio,
@@ -49,9 +78,10 @@ export default function ProfilePage() {
     setTimeout(() => setSaveState("idle"), 2500);
   }
 
-  // The missing function restored:
-  function handlePasswordSubmit(e) {
+  async function handlePasswordSubmit(e) {
     e.preventDefault();
+    setPasswordError("");
+
     if (!passwordForm.current || !passwordForm.next || !passwordForm.confirm) {
       setPasswordError("Please fill in all fields.");
       return;
@@ -64,15 +94,21 @@ export default function ProfilePage() {
       setPasswordError("New password and confirmation do not match.");
       return;
     }
-    
-    // Simulating successful password update
+
+    const result = await changePassword(passwordForm.current, passwordForm.next);
+
+    if (!result.success) {
+      setPasswordError(result.error || "Failed to update password.");
+      return;
+    }
+
     setPasswordForm({ current: "", next: "", confirm: "" });
     setPasswordError("");
     setPasswordOpen(false);
   }
 
   return (
-    <div className="max-w-8xl mx-auto space-y-8 px-4 sm:px-6 pb-16 pt-2">
+    <div className="max-w-8xl mx-auto space-y-8 pb-16 pt-2">
       <ProfileHeader saveState={saveState} handleSave={handleSave} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -86,9 +122,9 @@ export default function ProfilePage() {
             fileInputRef={fileInputRef}
             handleAvatarChange={handleAvatarChange}
           />
-          
+
           <ProfessionalDetails seed={seed} />
-          
+
           <ProfileSecurity setPasswordOpen={setPasswordOpen} />
         </div>
 

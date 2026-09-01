@@ -1,6 +1,6 @@
-import Navbar from "@/components/pages/demo/Navbar";
-import Footer from "@/components/pages/demo/Footer";
-import PageTransition from "@/components/shared/PageTransition";
+import Navbar from "@/components/pages/(public)/demo/Navbar";
+import Footer from "@/components/pages/(public)/demo/Footer";
+import PageTransition from "@/components/common/PageTransition";
 
 export default function PublicLayout({ children }) {
   return (

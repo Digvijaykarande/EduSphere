@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { useThemeStore } from "@/store/use-theme-store";
+import { useAuthStore } from "@/store/authStore";
 import {
   CreditCard,
-  Upload,
   Save,
   Mail,
   MessageSquare,
@@ -13,28 +13,48 @@ import {
   FileText,
   Cloud,
   Download,
-  ChevronDown,
-  UserCircle,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 import GeneralInformationSection from "../../../components/pages/dashboard/settings/GeneralInformationSection";
-// Define access rules for different sections
+
+// Define access rules for different sections.
 const PERMISSIONS = {
   generalInfo: ["superadmin", "principal"],
-  generalInfoEdit: ["superadmin"], // Only superadmin can edit core school details
+  generalInfoEdit: ["superadmin"],
   notifications: ["superadmin", "principal", "teacher"],
   systemPrefs: ["superadmin", "principal", "teacher"],
   academicSession: ["superadmin", "principal"],
   dataBackup: ["superadmin"],
 };
 
+// Backend roles are UPPERCASE (SUPER_ADMIN / SCHOOL / TEACHER / STUDENT);
+// PERMISSIONS above is keyed by lowercase tier. Map real → tier. Unknown /
+// still-hydrating roles fall through to the least-privileged tier so we never
+// briefly flash super-admin-only sections.
+const ROLE_PERM_MAP = {
+  SUPER_ADMIN: "superadmin",
+  SCHOOL: "principal",
+  TEACHER: "teacher",
+  STUDENT: "teacher",
+};
+
 export default function SettingsPage() {
   const theme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
 
-  // TODO: Replace this with your actual Auth hook (e.g., useSession from NextAuth)
-  const [currentUserRole, setCurrentUserRole] = useState("superadmin");
+  const role = useAuthStore((state) => state.user?.role);
+  const currentUserRole = ROLE_PERM_MAP[role] || "teacher";
 
   const [toggles, setToggles] = useState({
     email: true,
@@ -75,44 +95,24 @@ export default function SettingsPage() {
     </button>
   );
 
-  const Select = ({ label, children, ...props }) => (
+  // Thin wrapper around the shadcn Select so call sites below keep the same
+  // "label + options" shape the old native-<select> helper had.
+  const SettingsSelect = ({ label, children, className, ...props }) => (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>
-      <div className="relative">
-        <select
-          {...props}
-          className="dash-focus w-full appearance-none border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-foreground bg-white dark:bg-slate-800 cursor-pointer pr-8 disabled:opacity-60 disabled:cursor-not-allowed"
+      <Label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">{label}</Label>
+      <Select {...props}>
+        <SelectTrigger
+          className={`dash-focus w-full justify-between border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 h-auto text-sm text-foreground bg-white dark:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed ${className || ""}`}
         >
-          {children}
-        </select>
-        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-      </div>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>{children}</SelectContent>
+      </Select>
     </div>
   );
 
   return (
-    <div className="w-full max-w-[1700px] mx-auto min-h-screen">
-      
-      {/* DEVELOPMENT ONLY: Temporary Role Switcher to test UI */}
-      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center gap-4">
-        <UserCircle className="text-blue-500" />
-        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Test Role View:</span>
-        <div className="flex gap-2">
-          {["superadmin", "principal", "teacher"].map((role) => (
-            <button
-              key={role}
-              onClick={() => setCurrentUserRole(role)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-colors ${
-                currentUserRole === role 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-white text-blue-600 hover:bg-blue-100 border border-blue-200"
-              }`}
-            >
-              {role}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="w-full max-w-[1700px] mx-auto">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
@@ -124,10 +124,10 @@ export default function SettingsPage() {
             <span className="text-slate-700 dark:text-slate-300">Settings</span>
           </div>
         </div>
-        <button className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm shadow-md hover:bg-primary/90 hover:shadow-lg transition-all">
+        <Button className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm shadow-md hover:bg-primary/90 hover:shadow-lg transition-all">
           <Save size={18} />
           Save Changes
-        </button>
+        </Button>
       </div>
 
       <div>
@@ -135,81 +135,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           
           {/* General Information */}
-          {/* {hasAccess("generalInfo") && (
-            <div className="dashboard-card p-6 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm">
-              <h2 className="text-lg font-bold text-foreground mb-1">General Information</h2>
-              <p className="text-sm text-slate-500 mb-6">Update your school's basic information.</p>
-
-              <div className="flex flex-col sm:flex-row gap-8">
-                <div className="flex flex-col items-center gap-4 shrink-0">
-                  <div className="text-sm font-semibold text-slate-700 dark:text-slate-300 w-full">School Logo</div>
-                  <div className="w-32 h-32 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center p-2 shadow-sm overflow-hidden">
-                    <img
-                      src="https://t4.ftcdn.net/jpg/02/38/94/05/240_F_238940516_0BihE7YocY9vpgClPDDWuuaLneDwxtWn.jpg"
-                      alt="School Logo"
-                      className="object-contain h-full opacity-80 mix-blend-multiply"
-                    />
-                  </div>
-                  {hasAccess("generalInfoEdit") && (
-                    <>
-                      <button className="text-primary text-sm font-semibold flex items-center gap-1.5 hover:text-primary/80 transition-colors">
-                        <Upload size={16} /> Change Logo
-                      </button>
-                      <span className="text-[11px] text-slate-400 -mt-2">PNG, JPG up to 2MB</span>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">School Name</label>
-                    <input 
-                      type="text" 
-                      defaultValue="EduSphere International School" 
-                      disabled={!hasAccess("generalInfoEdit")}
-                      className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">School Code</label>
-                    <input 
-                      type="text" 
-                      defaultValue="EDU1234" 
-                      disabled={!hasAccess("generalInfoEdit")}
-                      className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
-                    <input 
-                      type="email" 
-                      defaultValue="info@edusphere.com" 
-                      className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Phone Number</label>
-                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 overflow-hidden dash-focus-within">
-                      <div className="bg-slate-50 dark:bg-slate-700/60 border-r border-slate-200 dark:border-slate-700 px-3 py-2 text-sm flex items-center gap-1.5 cursor-pointer">
-                        🇮🇳  
-                      </div>
-                      <input type="text" defaultValue="+91 98765 43210" className="w-full px-3 py-2 text-sm text-foreground outline-none bg-transparent" />
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Address</label>
-                    <textarea 
-                      type="text" 
-                      defaultValue="123 Education Street, Knowledge City, Bangalore" 
-                      disabled={!hasAccess("generalInfoEdit")}
-                      className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )} */}
-          <GeneralInformationSection />
+          <GeneralInformationSection hasAccess={hasAccess} />
 
          {/* Academic Session */}
           {hasAccess("academicSession") && (
@@ -218,47 +144,47 @@ export default function SettingsPage() {
               <p className="text-sm text-slate-500 mb-6">Set the current term, calendar, and grading system.</p>
 
               <div className="space-y-5">
-                <Select label="Current Academic Session" defaultValue="2024-2025">
-                  <option value="2024-2025">2024 - 2025</option>
-                  <option value="2023-2024">2023 - 2024</option>
-                </Select>
+                <SettingsSelect label="Current Academic Session" defaultValue="2024-2025">
+                  <SelectItem value="2024-2025">2024 - 2025</SelectItem>
+                  <SelectItem value="2023-2024">2023 - 2024</SelectItem>
+                </SettingsSelect>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Session Start</label>
-                    <input type="date" defaultValue="2024-06-01" className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800" />
+                    <Label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Session Start</Label>
+                    <Input type="date" defaultValue="2024-06-01" className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Session End</label>
-                    <input type="date" defaultValue="2025-04-30" className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800" />
+                    <Label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Session End</Label>
+                    <Input type="date" defaultValue="2025-04-30" className="dash-focus w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm text-foreground bg-white dark:bg-slate-800" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Weekly Off Days</label>
+                  <Label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Weekly Off Days</Label>
                   <div className="flex flex-wrap gap-2">
                     {WEEKDAYS.map((day) => (
-                      <button
+                      <Button
                         key={day}
                         type="button"
                         onClick={() => toggleWeeklyOff(day)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                        className={`px-3 py-1.5 h-auto rounded-lg text-xs font-semibold border transition-colors ${
                           weeklyOff.has(day)
-                            ? "bg-primary text-white border-primary"
-                            : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "bg-primary text-white border-primary hover:bg-primary/90"
+                            : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                       >
                         {day}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
 
-                <Select label="Grading System" defaultValue="percentage">
-                  <option value="percentage">Percentage (0–100)</option>
-                  <option value="gpa">GPA (4.0 scale)</option>
-                  <option value="letter">Letter Grade (A–F)</option>
-                </Select>
+                <SettingsSelect label="Grading System" defaultValue="percentage">
+                  <SelectItem value="percentage">Percentage (0–100)</SelectItem>
+                  <SelectItem value="gpa">GPA (4.0 scale)</SelectItem>
+                  <SelectItem value="letter">Letter Grade (A–F)</SelectItem>
+                </SettingsSelect>
               </div>
             </div>
           )}
@@ -308,15 +234,15 @@ export default function SettingsPage() {
                 <p className="text-sm text-slate-500 mb-6">Customize system-wide preferences.</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  <Select label="Appearance" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                  </Select>
-                  <Select label="Items Per Page" defaultValue="25">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                  </Select>
+                  <SettingsSelect label="Appearance" value={theme} onValueChange={(value) => setTheme(value)}>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                  </SettingsSelect>
+                  <SettingsSelect label="Items Per Page" defaultValue="25">
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SettingsSelect>
                 </div>
 
                 <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-5">
@@ -346,9 +272,9 @@ export default function SettingsPage() {
                         <div className="text-[11px] text-slate-500">Create a backup of your system data</div>
                       </div>
                     </div>
-                    <button className="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-primary hover:bg-[#eef0ff] dark:hover:bg-primary/10 hover:border-primary/30 transition-colors bg-white dark:bg-slate-800 shrink-0">
+                    <Button className="px-4 py-2 h-auto border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-primary hover:bg-[#eef0ff] dark:hover:bg-primary/10 hover:border-primary/30 transition-colors bg-white dark:bg-slate-800 shrink-0">
                       Create Backup
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-slate-100 dark:border-slate-800 rounded-xl hover:border-slate-200 dark:hover:border-slate-700 transition-colors bg-slate-50/50 dark:bg-slate-800/40">
@@ -361,9 +287,9 @@ export default function SettingsPage() {
                         <div className="text-[11px] text-slate-500">Export system data to CSV/Excel</div>
                       </div>
                     </div>
-                    <button className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-primary hover:bg-[#eef0ff] dark:hover:bg-primary/10 hover:border-primary/30 transition-colors bg-white dark:bg-slate-800 shrink-0">
+                    <Button className="flex items-center gap-1.5 px-4 py-2 h-auto border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-primary hover:bg-[#eef0ff] dark:hover:bg-primary/10 hover:border-primary/30 transition-colors bg-white dark:bg-slate-800 shrink-0">
                       <Download size={14} /> Export
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

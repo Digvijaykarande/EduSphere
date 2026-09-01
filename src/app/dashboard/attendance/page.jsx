@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
-import PageWrapper from "@/components/shared/PageWrapper";
-import { ROLE_PERMISSIONS } from "@/store/attendance.utils";
+import React from "react";
+import PageWrapper from "@/components/common/PageWrapper";
+import { getScopeForBackendRole } from "@/store/attendance.utils";
+import { useAuthStore } from "@/store/authStore";
 import TeacherAttendancePage from "@/components/pages/dashboard/attendance/components/Teacherattendancepage";
 import StudentAttendanceView from "@/components/pages/dashboard/attendance/components/Studentattendanceview";
 import PrincipalAttendanceView from "@/components/pages/dashboard/attendance/components/Principalattendanceview";
-import RoleSwitcher from "@/components/pages/dashboard/attendance/components/RoleSwitcher";
 
 export default function AttendancePage() {
-  const [activeRole, setActiveRole] = useState("Teacher");
-  const scope = ROLE_PERMISSIONS[activeRole]?.scope || "class";
+  const user = useAuthStore((s) => s.user);
+
+  if (!user) {
+    return <p className="text-sm text-slate-500">Loading…</p>;
+  }
+
+  const scope = getScopeForBackendRole(user.role) || "class";
 
   return (
     <PageWrapper>
@@ -23,12 +28,9 @@ export default function AttendancePage() {
             Dashboard <span className="mx-1">›</span> Attendance
           </p>
         </div>
-
-        {/* Manual Rule Selection UI */}
-        <RoleSwitcher activeRole={activeRole} setActiveRole={setActiveRole} />
       </div>
 
-      {/* Render the correct component based on the scope */}
+      {/* Render the correct component based on the logged-in user's real role */}
       {scope === "self" && <StudentAttendanceView />}
       {scope === "class" && <TeacherAttendancePage />}
       {scope === "school" && <PrincipalAttendanceView />}

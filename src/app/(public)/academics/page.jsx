@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import PageTransition from "@/components/shared/PageTransition";
-import { AcademicsHero } from "@/components/pages/academics/AcademicsHero";
-import { Philosophy } from "@/components/pages/academics/Philosophy";
-import { ProgressionTiers } from "@/components/pages/academics/ProgressionTiers";
-import { Streams } from "@/components/pages/academics/Streams";
-import { InnovationLabs } from "@/components/pages/academics/InnovationLabs";
-import { Testimonial } from "@/components/pages/academics/Testimonial";
-import { EvaluationFramework } from "@/components/pages/academics/EvaluationFramework";
-import { Faq } from "@/components/pages/academics/Faq";
+import PageTransition from "@/components/common/PageTransition";
+import { AcademicsHero } from "@/components/pages/(public)/academics/AcademicsHero";
+import { Philosophy } from "@/components/pages/(public)/academics/Philosophy";
+import { ProgressionTiers } from "@/components/pages/(public)/academics/ProgressionTiers";
+import { Streams } from "@/components/pages/(public)/academics/Streams";
+import { InnovationLabs } from "@/components/pages/(public)/academics/InnovationLabs";
+import { Testimonial } from "@/components/pages/(public)/academics/Testimonial";
+import { EvaluationFramework } from "@/components/pages/(public)/academics/EvaluationFramework";
+import { Faq } from "@/components/pages/(public)/academics/Faq";
 
 export default function AcademicsPage() {
   return (

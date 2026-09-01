@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import Navbar from "@/components/pages/demo/Navbar";
-import Footer from "@/components/pages/demo/Footer";
+import Navbar from "@/components/pages/(public)/demo/Navbar";
+import Footer from "@/components/pages/(public)/demo/Footer";
 import { CalendarRange, ArrowUpRight } from "lucide-react";
 
 export default function EventsPage() {
