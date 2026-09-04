@@ -115,15 +115,14 @@ body {
   border: 1px solid #e1e5ee;
   overflow: hidden;
 }
-.report-card::before {
+/* .report-card::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 4px;
   background: linear-gradient(90deg, var(--primary), #8b7ffb 60%, var(--gold));
-}
+} */
 .report-card::after {
-  content: "";
   position: absolute;
   top: 4px; left: 0; right: 0;
   height: 1px;

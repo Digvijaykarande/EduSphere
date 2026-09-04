@@ -103,7 +103,7 @@ function PendingHomeworkMini({ homework = [] }) {
     .slice(0, 4);
 
   return (
-    <Card className="shadow-sm">
+    <Card className="report-card shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-3">
           <div>

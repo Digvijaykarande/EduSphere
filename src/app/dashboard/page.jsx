@@ -54,7 +54,7 @@ export default function DashboardHub() {
         schoolName={schoolName}
       />
 
-      <QuickActionsBar actions={quickActions} />
+      {/* <QuickActionsBar actions={quickActions} /> */}
 
       <StatsGrid loading={loading} stats={stats} />
 

@@ -273,6 +273,16 @@ export const api = {
   getStudentAttendanceHistory: (studentSlug, params) =>
     request(`/api/attendance/student/${studentSlug}`, { query: params || {} }),
   getMyTodaySummaries: () => request("/api/attendance/today-summaries"),
+  // TODO(backend): not implemented yet. Expected response shape:
+  //   { data: { week: [{ label: "Mon", present, absent }, ...] } }
+  // Student's own Mon-Sat attendance breakdown for the current week.
+  getMyAttendanceWeek: (params) =>
+    request("/api/attendance/mine/week", { query: params || {} }),
+  // TODO(backend): not implemented yet. Expected response shape:
+  //   { data: { week: [{ label: "Mon", present, absent }, ...] } }
+  // Teacher's Mon-Sat present/absent totals summed across their sections.
+  getMyWeeklySummaries: (params) =>
+    request("/api/attendance/today-summaries/week", { query: params || {} }),
   getSectionAttendanceSummary: (params) =>
     request("/api/attendance/section-summary", { query: params }),
   getSchoolAttendanceTrend: (params) =>

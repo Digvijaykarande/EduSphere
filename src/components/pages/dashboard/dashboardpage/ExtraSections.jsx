@@ -1,22 +1,3 @@
-// components/pages/dashboard/dashboardpage/ExtraSections.jsx
-//
-// Dashboard sections shared across roles but rendered with role-specific
-// content and framing:
-//  - GoalRing: animated circular progress ring. Now supports an optional
-//    `compareTo` (e.g. "vs 90% target") rendered as a small delta chip
-//    next to the ring, and a `trend` arrow when the caller supplies one.
-//  - ActivityFeed: unified recent-activity timeline. Each role gets its
-//    own header copy and accent color (violet=principal, blue=teacher,
-//    emerald=student) so the same component doesn't look interchangeable
-//    across roles.
-//  - FocusPanel: role-scoped "at a glance" ring cluster. Principal gets
-//    two rings side-by-side (attendance + fees) with a divider; Teacher
-//    gets a single ring plus a mini class-count stat; Student gets a
-//    single ring plus a streak-style note derived from their own stats.
-//
-// No fabricated data — every value here still comes from the same `data`
-// object the rest of the dashboard already consumes via useDashboardData.
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -37,7 +18,12 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PanelHeader, EmptyRow } from "./SharedUI";
+import {
+  PanelHeader,
+  EmptyRow,
+  usePagedItems,
+  CardPagination,
+} from "./SharedUI";
 import { formatINRCompact } from "./helpers";
 
 /* ---------------------------- GoalRing ---------------------------- */
@@ -57,13 +43,21 @@ export function GoalRing({ label, pct, tone = "violet", sub, compareTo }) {
   const offset = c - (value / 100) * c;
   const toneColor = RING_TONES[tone] || RING_TONES.violet;
 
-  const delta = compareTo != null ? Math.round((value - compareTo) * 10) / 10 : null;
+  const delta =
+    compareTo != null ? Math.round((value - compareTo) * 10) / 10 : null;
 
   return (
     <div className="flex items-center gap-4">
       <div className="relative h-20 w-20 shrink-0">
         <svg viewBox="0 0 80 80" className="h-20 w-20 -rotate-90">
-          <circle cx="40" cy="40" r={r} fill="none" strokeWidth="8" className="stroke-slate-100 dark:stroke-slate-800" />
+          <circle
+            cx="40"
+            cy="40"
+            r={r}
+            fill="none"
+            strokeWidth="8"
+            className="stroke-slate-100 dark:stroke-slate-800"
+          />
           {compareTo != null && (
             <circle
               cx="40"
@@ -74,7 +68,8 @@ export function GoalRing({ label, pct, tone = "violet", sub, compareTo }) {
               strokeDasharray="2 4"
               className="stroke-slate-300 dark:stroke-slate-600"
               style={{
-                strokeDashoffset: c - (Math.max(0, Math.min(100, compareTo)) / 100) * c,
+                strokeDashoffset:
+                  c - (Math.max(0, Math.min(100, compareTo)) / 100) * c,
               }}
             />
           )}
@@ -93,12 +88,20 @@ export function GoalRing({ label, pct, tone = "violet", sub, compareTo }) {
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-mono font-bold text-foreground">{value}%</span>
+          <span className="text-sm font-mono font-bold text-foreground">
+            {value}%
+          </span>
         </div>
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{label}</p>
-        {sub ? <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p> : null}
+        <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+          {label}
+        </p>
+        {sub ? (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+            {sub}
+          </p>
+        ) : null}
         {delta != null && (
           <span
             className={`inline-flex items-center gap-1 text-[10px] font-bold mt-1 px-1.5 py-0.5 rounded-full ${
@@ -118,21 +121,43 @@ export function GoalRing({ label, pct, tone = "violet", sub, compareTo }) {
 
 /* ---------------------------- ActivityFeed ---------------------------- */
 
+// `href` points each role's "View all" link at the page where that
+// activity actually lives, since there's no dedicated activity-log route.
 const FEED_THEME = {
-  principal: { accent: "violet", title: "School activity", subtitle: "What's changed across the school" },
-  teacher: { accent: "blue", title: "Class activity", subtitle: "What's changed in your sections" },
-  student: { accent: "green", title: "My activity", subtitle: "Your recent updates" },
+  principal: {
+    accent: "violet",
+    title: "School activity",
+    subtitle: "What's changed across the school",
+    href: "/dashboard/events",
+  },
+  teacher: {
+    accent: "blue",
+    title: "Class activity",
+    subtitle: "What's changed in your sections",
+    href: "/dashboard/attendance",
+  },
+  student: {
+    accent: "green",
+    title: "My activity",
+    subtitle: "Your recent updates",
+    href: "/dashboard/academics",
+  },
 };
 
 function buildActivityItems({ isStudent, isTeacher, data }) {
   const items = [];
 
   if (isStudent) {
-    (data.homework || []).slice(0, 3).forEach((a) => {
+    (data.homework || []).slice(0, 6).forEach((a) => {
       const status = a.submission?.status || "IN_PROGRESS";
       items.push({
         icon: BookOpen,
-        tone: status === "GRADED" ? "green" : status === "SUBMITTED" ? "blue" : "orange",
+        tone:
+          status === "GRADED"
+            ? "green"
+            : status === "SUBMITTED"
+              ? "blue"
+              : "orange",
         title:
           status === "GRADED"
             ? `Graded: ${a.title || a.subject || "Assignment"}`
@@ -143,10 +168,15 @@ function buildActivityItems({ isStudent, isTeacher, data }) {
       });
     });
     if (data.fee?.pendingAmount > 0) {
-      items.push({ icon: Wallet, tone: "orange", title: `Fee payment pending`, time: data.fee.dueDate ? new Date(data.fee.dueDate) : null });
+      items.push({
+        icon: Wallet,
+        tone: "orange",
+        title: `Fee payment pending`,
+        time: data.fee.dueDate ? new Date(data.fee.dueDate) : null,
+      });
     }
   } else if (isTeacher) {
-    (data.summaries || []).slice(0, 3).forEach((s) => {
+    (data.summaries || []).slice(0, 6).forEach((s) => {
       const marked = s.total > 0;
       items.push({
         icon: CheckCircle2,
@@ -158,8 +188,13 @@ function buildActivityItems({ isStudent, isTeacher, data }) {
       });
     });
   } else {
-    (data.events || []).slice(0, 3).forEach((e) => {
-      items.push({ icon: UserPlus, tone: "violet", title: e.title || "School event", time: e.date ? new Date(e.date) : null });
+    (data.events || []).slice(0, 6).forEach((e) => {
+      items.push({
+        icon: UserPlus,
+        tone: "violet",
+        title: e.title || "School event",
+        time: e.date ? new Date(e.date) : null,
+      });
     });
   }
 
@@ -171,52 +206,87 @@ export function ActivityFeed({ isStudent, isTeacher, data }) {
   const roleKey = isStudent ? "student" : isTeacher ? "teacher" : "principal";
   const theme = FEED_THEME[roleKey];
 
+  const compact = roleKey === "student";
+  const { page, pageCount, pageItems, next, prev } = usePagedItems(
+    items,
+    compact ? 4 : 4,
+  );
+
   return (
-    <Card className="shadow-sm overflow-hidden">
-      <div className={`h-1 w-full bg-${theme.accent}-500`} style={{ backgroundColor: RING_TONES[theme.accent === "green" ? "green" : theme.accent] }} />
-      <CardHeader className="pb-2">
-        <PanelHeader title={theme.title} subtitle={theme.subtitle} />
+    <Card className={`shadow-sm overflow-hidden ${compact ? "h-full" : ""}`}>
+      <div
+        className="h-1 w-full"
+        style={{
+          backgroundColor:
+            RING_TONES[theme.accent === "green" ? "green" : theme.accent],
+        }}
+      />
+      <CardHeader className={compact ? "pb-1.5 pt-4" : "pb-2"}>
+        <PanelHeader
+          title={theme.title}
+          subtitle={theme.subtitle}
+          href={theme.href}
+          action="View all"
+        />
       </CardHeader>
       <CardContent className="pt-0">
         {items.length === 0 ? (
           <EmptyRow>Nothing new to show right now.</EmptyRow>
         ) : (
-          <div className="relative pl-4 space-y-4">
-            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-slate-100 dark:bg-slate-800" />
-            {items.map((it, i) => {
-              const Icon = it.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  className="relative flex items-start gap-3"
-                >
-                  <span
-                    className={`absolute -left-4 mt-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-4 ring-white dark:ring-slate-900 ${
-                      it.tone === "green"
-                        ? "bg-emerald-500"
-                        : it.tone === "orange"
-                          ? "bg-amber-500"
-                          : it.tone === "blue"
-                            ? "bg-blue-500"
-                            : "bg-violet-500"
-                    }`}
-                  />
-                  <Icon size={13} className="mt-0.5 text-slate-300 dark:text-slate-600 shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{it.title}</p>
-                    {it.time && (
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        {it.time.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          <>
+            <div
+              className={`relative pl-4 ${compact ? "space-y-3" : "space-y-4"}`}
+            >
+              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-slate-100 dark:bg-slate-800" />
+              {pageItems.map((it, i) => {
+                const Icon = it.icon;
+                return (
+                  <motion.div
+                    key={`${page}-${i}`}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="relative flex items-start gap-3"
+                  >
+                    <span
+                      className={`absolute -left-4 mt-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full ring-4 ring-white dark:ring-slate-900 ${
+                        it.tone === "green"
+                          ? "bg-emerald-500"
+                          : it.tone === "orange"
+                            ? "bg-amber-500"
+                            : it.tone === "blue"
+                              ? "bg-blue-500"
+                              : "bg-violet-500"
+                      }`}
+                    />
+                    <Icon
+                      size={13}
+                      className="mt-0.5 text-slate-300 dark:text-slate-600 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">
+                        {it.title}
                       </p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                      {it.time && (
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          {it.time.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+            <CardPagination
+              page={page}
+              pageCount={pageCount}
+              onPrev={prev}
+              onNext={next}
+            />
+          </>
         )}
       </CardContent>
     </Card>
@@ -225,13 +295,18 @@ export function ActivityFeed({ isStudent, isTeacher, data }) {
 
 /* ---------------------------- FocusPanel (role-scoped "at a glance" rings) ---------------------------- */
 
-export function FocusPanel({ isStudent, isTeacher, data = {}, teacherDerived }) {
+export function FocusPanel({
+  isStudent,
+  isTeacher,
+  data = {},
+  teacherDerived,
+}) {
   if (isStudent) {
     const att = data?.attendance;
     const pct = att?.attendancePct ?? 0;
     const strong = pct >= 90;
     return (
-      <Card className="shadow-sm h-full">
+      <Card className="report-card shadow-sm h-full" style={{ borderTop: "3px solid #10B981" }}>
         <CardHeader className="pb-2">
           <PanelHeader title="At a glance" subtitle="Your attendance, today" />
         </CardHeader>
@@ -244,9 +319,18 @@ export function FocusPanel({ isStudent, isTeacher, data = {}, teacherDerived }) 
             compareTo={90}
           />
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-2.5">
-            <Flame size={14} className={strong ? "text-emerald-500" : "text-slate-300 dark:text-slate-600"} />
+            <Flame
+              size={14}
+              className={
+                strong
+                  ? "text-emerald-500"
+                  : "text-slate-300 dark:text-slate-600"
+              }
+            />
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              {strong ? "Above target — keep it up." : "Below the 90% target this term."}
+              {strong
+                ? "Above target — keep it up."
+                : "Below the 90% target this term."}
             </p>
           </div>
         </CardContent>
@@ -269,12 +353,15 @@ export function FocusPanel({ isStudent, isTeacher, data = {}, teacherDerived }) 
             label="Today's marking"
             pct={prRate ?? 0}
             tone="violet"
-            sub={prRate != null ? "Sections marked present rate" : "Not marked yet"}
+            sub={
+              prRate != null ? "Sections marked present rate" : "Not marked yet"
+            }
           />
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-2.5">
             <Layers size={14} className="text-blue-500" />
             <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              {clsCount} class{clsCount === 1 ? "" : "es"} · {subjCount} subject{subjCount === 1 ? "" : "s"}
+              {clsCount} class{clsCount === 1 ? "" : "es"} · {subjCount} subject
+              {subjCount === 1 ? "" : "s"}
             </p>
           </div>
         </CardContent>
@@ -329,7 +416,9 @@ export function NeedsAttention({ data = {} }) {
   const s = data.schoolStats;
   const f = data.feeStats;
 
-  const unmarkedTeachers = s ? Math.max(0, (s.totalTeachers || 0) - (s.teachersMarkedToday || 0)) : null;
+  const unmarkedTeachers = s
+    ? Math.max(0, (s.totalTeachers || 0) - (s.teachersMarkedToday || 0))
+    : null;
   const pendingStudents = f?.statusBreakdown?.Pending ?? null;
   const collectionRate = f?.collectionRate;
 
@@ -361,7 +450,10 @@ export function NeedsAttention({ data = {} }) {
     <Card className="shadow-sm h-full overflow-hidden">
       <div
         className="h-1 w-full"
-        style={{ backgroundColor: unmarkedTeachers > 0 || pendingStudents > 0 ? "#F59E0B" : "#10B981" }}
+        style={{
+          backgroundColor:
+            unmarkedTeachers > 0 || pendingStudents > 0 ? "#F59E0B" : "#10B981",
+        }}
       />
       <CardHeader className="pb-1">
         <PanelHeader title="Needs attention" subtitle="Today's open items" />
@@ -384,13 +476,82 @@ export function NeedsAttention({ data = {} }) {
                 <Icon size={16} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{r.title}</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{r.note}</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  {r.title}
+                </p>
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                  {r.note}
+                </p>
               </div>
-              <span className="text-sm font-mono font-semibold text-foreground shrink-0">{r.value}</span>
+              <span className="text-sm font-mono font-semibold text-foreground shrink-0">
+                {r.value}
+              </span>
             </div>
           );
         })}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ---------------------------- FeeMiniCard (Student) ---------------------------- */
+//
+// Compact fee-status module for the student overview. Reuses data.fee,
+// already fetched by useDashboardData — no new API calls. Sits alongside
+// HomeworkProgress and the compacted ActivityFeed to fill out the row.
+
+export function FeeMiniCard({ data = {} }) {
+  const fee = data.fee;
+  const pending = Number(fee?.pendingAmount || 0);
+  const dueDate = fee?.dueDate ? new Date(fee.dueDate) : null;
+  const overdue = dueDate ? dueDate.getTime() < Date.now() : false;
+  const clear = fee && pending <= 0;
+
+  return (
+    <Card className="report-card shadow-sm h-full">
+      <CardHeader className="pb-2">
+        <PanelHeader
+          title="My fees"
+          subtitle="Current academic year"
+          href="/dashboard/fees"
+          action="Open"
+        />
+      </CardHeader>
+      <CardContent className="pt-0">
+        {!fee ? (
+          <EmptyRow>No fee record found.</EmptyRow>
+        ) : clear ? (
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/10 px-3.5 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={16} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                All fees paid
+              </p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                Nothing pending this year
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl border border-amber-100 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-500/10 px-3.5 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+              <Wallet size={16} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
+                {formatINRCompact(pending)}
+              </p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
+                {overdue ? "Overdue" : "Pending"}
+                {dueDate
+                  ? ` · due ${dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                  : ""}
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -406,7 +567,9 @@ export function NeedsAttention({ data = {} }) {
 export function HomeworkProgress({ data = {} }) {
   const hw = data.homework || [];
   const graded = hw.filter((a) => a.submission?.status === "GRADED").length;
-  const submitted = hw.filter((a) => a.submission?.status === "SUBMITTED").length;
+  const submitted = hw.filter(
+    (a) => a.submission?.status === "SUBMITTED",
+  ).length;
   const pending = hw.length - graded - submitted;
 
   const total = hw.length || 1;
@@ -415,16 +578,28 @@ export function HomeworkProgress({ data = {} }) {
   const pendingPct = 100 - gradedPct - submittedPct;
 
   const avgScore = (() => {
-    const scored = hw.filter((a) => typeof a.submission?.score === "number" && typeof a.submission?.maxScore === "number" && a.submission.maxScore > 0);
+    const scored = hw.filter(
+      (a) =>
+        typeof a.submission?.score === "number" &&
+        typeof a.submission?.maxScore === "number" &&
+        a.submission.maxScore > 0,
+    );
     if (!scored.length) return null;
-    const pct = scored.reduce((acc, a) => acc + a.submission.score / a.submission.maxScore, 0) / scored.length;
+    const pct =
+      scored.reduce(
+        (acc, a) => acc + a.submission.score / a.submission.maxScore,
+        0,
+      ) / scored.length;
     return Math.round(pct * 100);
   })();
 
   return (
-    <Card className="shadow-sm h-full">
+    <Card className="report-card shadow-sm h-full">
       <CardHeader className="pb-2">
-        <PanelHeader title="Homework progress" subtitle="Across all assigned work" />
+        <PanelHeader
+          title="Homework progress"
+          subtitle="Across all assigned work"
+        />
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
         {hw.length === 0 ? (
@@ -434,7 +609,14 @@ export function HomeworkProgress({ data = {} }) {
             <div className="flex items-center gap-4">
               <div className="relative h-16 w-16 shrink-0">
                 <svg viewBox="0 0 80 80" className="h-16 w-16 -rotate-90">
-                  <circle cx="40" cy="40" r="34" fill="none" strokeWidth="8" className="stroke-slate-100 dark:stroke-slate-800" />
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r="34"
+                    fill="none"
+                    strokeWidth="8"
+                    className="stroke-slate-100 dark:stroke-slate-800"
+                  />
                   <motion.circle
                     cx="40"
                     cy="40"
@@ -445,7 +627,10 @@ export function HomeworkProgress({ data = {} }) {
                     stroke="#10B981"
                     strokeDasharray={2 * Math.PI * 34}
                     initial={{ strokeDashoffset: 2 * Math.PI * 34 }}
-                    animate={{ strokeDashoffset: 2 * Math.PI * 34 * (1 - (graded + submitted) / total) }}
+                    animate={{
+                      strokeDashoffset:
+                        2 * Math.PI * 34 * (1 - (graded + submitted) / total),
+                    }}
                     transition={{ duration: 1, ease: "easeOut" }}
                   />
                 </svg>
@@ -456,7 +641,9 @@ export function HomeworkProgress({ data = {} }) {
                 </div>
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Completion rate</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Completion rate
+                </p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                   {graded + submitted}/{hw.length} handed in
                 </p>
@@ -469,23 +656,56 @@ export function HomeworkProgress({ data = {} }) {
             </div>
 
             <div className="h-2 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 flex">
-              <div className="h-full bg-emerald-500" style={{ width: `${gradedPct}%` }} />
-              <div className="h-full bg-blue-500" style={{ width: `${submittedPct}%` }} />
-              <div className="h-full bg-amber-500" style={{ width: `${pendingPct}%` }} />
+              <div
+                className="h-full bg-emerald-500"
+                style={{ width: `${gradedPct}%` }}
+              />
+              <div
+                className="h-full bg-blue-500"
+                style={{ width: `${submittedPct}%` }}
+              />
+              <div
+                className="h-full bg-amber-500"
+                style={{ width: `${pendingPct}%` }}
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               {[
-                { label: "Graded", val: graded, color: "text-emerald-600 dark:text-emerald-400", icon: CheckCircle2 },
-                { label: "Submitted", val: submitted, color: "text-blue-600 dark:text-blue-400", icon: ClipboardCheck },
-                { label: "Pending", val: pending, color: "text-amber-600 dark:text-amber-400", icon: Hourglass },
+                {
+                  label: "Graded",
+                  val: graded,
+                  color: "text-emerald-600 dark:text-emerald-400",
+                  icon: CheckCircle2,
+                },
+                {
+                  label: "Submitted",
+                  val: submitted,
+                  color: "text-blue-600 dark:text-blue-400",
+                  icon: ClipboardCheck,
+                },
+                {
+                  label: "Pending",
+                  val: pending,
+                  color: "text-amber-600 dark:text-amber-400",
+                  icon: Hourglass,
+                },
               ].map((c) => {
                 const Icon = c.icon;
                 return (
-                  <div key={c.label} className="text-center rounded-lg bg-slate-50/60 dark:bg-slate-800/40 py-2">
+                  <div
+                    key={c.label}
+                    className="text-center rounded-lg bg-slate-50/60 dark:bg-slate-800/40 py-2"
+                  >
                     <Icon size={13} className={`mx-auto ${c.color}`} />
-                    <p className={`text-sm font-mono font-semibold mt-1 ${c.color}`}>{c.val}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{c.label}</p>
+                    <p
+                      className={`text-sm font-mono font-semibold mt-1 ${c.color}`}
+                    >
+                      {c.val}
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                      {c.label}
+                    </p>
                   </div>
                 );
               })}
