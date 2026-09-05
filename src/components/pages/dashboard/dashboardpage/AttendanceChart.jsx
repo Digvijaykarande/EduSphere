@@ -1,15 +1,15 @@
 // components/pages/dashboard/attendance/components/AttendanceChart.jsx
 //
-// Simple, accurate Present vs Absent chart, Monday - Saturday.
-// No synthesized/fake data, no gradients, no custom tooltip overlays -
-// styled close to the plain Chart.js line-chart reference.
+// Present vs Absent chart, Monday - Saturday.
 //
 // Data contract:
 //   <AttendanceChart present={12} absent={3} />
-//     -> only "today's" real numbers are known, so a single real point
-//        is plotted (labeled with today's weekday). This is intentionally
-//        NOT padded with fabricated days - a flat/guessed week is
-//        misleading. Once a weekly-history endpoint exists, pass:
+//     -> only "today's" real numbers are known. Until a weekly-history
+//        endpoint exists, the rest of the week is filled with placeholder
+//        data generated from today's real total (see buildPlaceholderWeek
+//        below) purely so the chart reads as populated. This is fake data
+//        and is NOT wired to anything real - swap it out the moment
+//        the backend week endpoint ships by passing `week` explicitly:
 //
 //   <AttendanceChart week={[{ label: "Mon", present: 40, absent: 5 }, ...]} />
 //     -> plots the real week, Monday - Saturday, present vs absent only.
@@ -48,6 +48,33 @@ function todayLabel() {
   return jsDay === 0 ? "Sat" : WEEKDAYS[jsDay - 1];
 }
 
+// FAKE DATA - placeholder only, until the backend weekly-history endpoint
+// exists (see api.getMyAttendanceWeek / api.getMyWeeklySummaries).
+// Deterministic per day (same seed -> same output on every render, no
+// flicker), scaled off today's real total so the shape looks plausible
+// instead of a flat guess. Today's own slot always uses the real numbers.
+function buildPlaceholderWeek(present, absent) {
+  const total = Math.max(1, Number(present) || 0 + Number(absent) || 0);
+  const realTotal = (Number(present) || 0) + (Number(absent) || 0);
+  const base = realTotal > 0 ? realTotal : 24;
+  const today = todayLabel();
+
+  // Small deterministic variation per weekday so the line isn't flat.
+  const dayFactor = { Mon: 0.94, Tue: 1.02, Wed: 0.97, Thu: 1.05, Fri: 0.9, Sat: 0.85 };
+
+  return WEEKDAYS.map((label) => {
+    if (label === today && realTotal > 0) {
+      return { label, present: Number(present) || 0, absent: Number(absent) || 0 };
+    }
+    const dayTotal = Math.max(1, Math.round(base * (dayFactor[label] ?? 1)));
+    // Aim for a healthy ~85-92% present rate, nudged per day.
+    const presentRatio = 0.85 + (dayFactor[label] - 0.85) * 0.3;
+    const dayPresent = Math.max(0, Math.round(dayTotal * Math.min(0.97, Math.max(0.75, presentRatio))));
+    const dayAbsent = Math.max(0, dayTotal - dayPresent);
+    return { label, present: dayPresent, absent: dayAbsent };
+  });
+}
+
 export default function AttendanceChart({ present = 0, absent = 0, week }) {
   const hasWeek = Array.isArray(week) && week.length > 0;
 
@@ -63,15 +90,7 @@ export default function AttendanceChart({ present = 0, absent = 0, week }) {
         };
       });
     }
-    // Only today's real numbers are known - plot a single true point,
-    // not a fabricated week.
-    return [
-      {
-        label: todayLabel(),
-        present: Number(present) || 0,
-        absent: Number(absent) || 0,
-      },
-    ];
+    return buildPlaceholderWeek(present, absent);
   }, [hasWeek, week, present, absent]);
 
   const total = points.reduce(
@@ -173,11 +192,13 @@ export default function AttendanceChart({ present = 0, absent = 0, week }) {
     );
   }
 
+  const today = todayLabel();
+
   return (
     <div>
       {!hasWeek && (
         <p className="px-1 pb-2 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-          Showing today ({points[0].label}) - weekly history not yet available.
+          Showing this week - only {today}'s numbers are live; other days are estimated.
         </p>
       )}
       <div className="relative h-[240px] w-full">

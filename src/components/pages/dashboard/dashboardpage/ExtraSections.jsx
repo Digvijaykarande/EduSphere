@@ -66,7 +66,7 @@ export function GoalRing({ label, pct, tone = "violet", sub, compareTo }) {
               fill="none"
               strokeWidth="2"
               strokeDasharray="2 4"
-              className="stroke-slate-300 dark:stroke-slate-600"
+              className="stroke-slate-400 dark:stroke-slate-400"
               style={{
                 strokeDashoffset:
                   c - (Math.max(0, Math.min(100, compareTo)) / 100) * c,
@@ -356,6 +356,7 @@ export function FocusPanel({
             sub={
               prRate != null ? "Sections marked present rate" : "Not marked yet"
             }
+            compareTo={100}
           />
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-2.5">
             <Layers size={14} className="text-blue-500" />
@@ -392,6 +393,7 @@ export function FocusPanel({
           pct={f?.collectionRate ?? 0}
           tone="orange"
           sub="Of total billed"
+          compareTo={100}
         />
         {/* <div className="flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-2.5">
           <GraduationCap size={14} className="text-violet-500" />

@@ -132,6 +132,7 @@ export function TeacherOverview({ data, teacherDerived }) {
             present={todayPresent}
             absent={todayAbsent}
             late={0}
+            week={data.summariesWeek}
           />
         </CardContent>
       </Card>
@@ -348,6 +349,7 @@ export function StudentOverview({ data }) {
             present={data.attendance?.present || 0}
             absent={data.attendance?.absent || 0}
             late={data.attendance?.late || 0}
+            week={data.attendanceWeek}
           />
         </CardContent>
       </Card>

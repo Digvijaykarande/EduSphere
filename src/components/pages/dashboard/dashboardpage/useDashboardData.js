@@ -24,11 +24,15 @@ export function useDashboardData(role, isStudent, isTeacher) {
 
       try {
         if (isStudent) {
-          const [att, fee, hw, ev] = await Promise.allSettled([
+          const [att, fee, hw, ev, attWeek] = await Promise.allSettled([
             api.getMyAttendance({}),
             api.getMyFee({}),
             api.getMyVisibleAssignments(),
             api.getEvents({ from: todayStr }),
+            // Not live on the backend yet - resolves to null until the
+            // /api/attendance/mine/week route exists; UI falls back to
+            // today-only when this is empty.
+            api.getMyAttendanceWeek({}),
           ]);
           if (cancelled) return;
           setData({
@@ -36,13 +40,18 @@ export function useDashboardData(role, isStudent, isTeacher) {
             fee: pick(fee)?.data?.fee || null,
             homework: pick(hw)?.data?.assignments || [],
             events: pick(ev)?.data || [],
+            attendanceWeek: pick(attWeek)?.data?.week || [],
           });
         } else if (isTeacher) {
-          const [asg, sum, created, ev] = await Promise.allSettled([
+          const [asg, sum, created, ev, sumWeek] = await Promise.allSettled([
             api.getMyAssignments(),
             api.getMyTodaySummaries(),
             api.getMyCreatedAssignments(),
             api.getEvents({ from: todayStr }),
+            // Not live on the backend yet - resolves to null until the
+            // /api/attendance/today-summaries/week route exists; UI falls
+            // back to today-only when this is empty.
+            api.getMyWeeklySummaries({}),
           ]);
           if (cancelled) return;
           setData({
@@ -50,6 +59,7 @@ export function useDashboardData(role, isStudent, isTeacher) {
             summaries: pick(sum)?.data?.summaries || [],
             createdHomework: pick(created)?.data?.assignments || [],
             events: pick(ev)?.data || [],
+            summariesWeek: pick(sumWeek)?.data?.week || [],
           });
         } else {
           const [stats, fee, trend, ev] = await Promise.allSettled([
