@@ -19,7 +19,8 @@ import {
   PanelLeftOpen,
   BookOpen,
   X,
-  Database
+  Database,
+  Trophy
 } from "lucide-react";
 
 // Add allowedRoles: ['admin', 'school', 'teacher', 'student']
@@ -48,6 +49,12 @@ const navItems = [
     icon: GraduationCap, 
     allowedRoles: ["admin", "school", "teacher", "student"] 
   },
+  // { 
+  //   label: "Class Performance", 
+  //   href: "/dashboard/class-performance", 
+  //   icon: Trophy, 
+  //   allowedRoles: ["teacher"] 
+  // },
   { 
     label: "Exams", 
     href: "/dashboard/exams", 

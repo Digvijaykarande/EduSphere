@@ -193,10 +193,11 @@ export const api = {
   deleteStaff: (slug) =>
     request(`/api/school/staff/${slug}`, { method: "DELETE" }),
 
-  // --- School profile ---
+    // --- School profile ---
+  getSchoolProfile: () => request("/api/school/profile"),
   updateSchoolProfile: (patch) =>
     request("/api/school/profile", { method: "PATCH", body: patch }),
-
+  
   // --- School: Events ---
   getEvents: (params) => request("/api/school/events", { query: params || {} }),
   createEvent: (payload) =>
@@ -260,6 +261,11 @@ export const api = {
     }),
   // --- Teacher: self-service ---
   getMyAssignments: () => request("/api/teacher/my-assignments"),
+
+  // Roster for one section (TEACHER of that section / SCHOOL). Returns
+  // { data: { section, roster: [{ studentId, slug, name, rollNumber, ... }] } }.
+  getSectionRoster: (sectionId) =>
+    request(`/api/attendance/sections/${sectionId}/roster`),
 
   // --- Teacher: attendance marking ---
   getAttendanceRoster: (params) =>
