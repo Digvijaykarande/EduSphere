@@ -1,7 +1,7 @@
 // src/store/authStore.js
 
 import { create } from "zustand";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, resetSessionExpiredGuard } from "@/lib/api";
 
 const errorMessage = (err, fallback) =>
   err instanceof ApiError ? err.message : fallback;
@@ -46,6 +46,7 @@ export const useAuthStore = create((set, get) => {
           isLoading: false,
           error: null,
         });
+        resetSessionExpiredGuard();
 
         // Broadcast LOGIN to sync other tabs if needed
         authChannel?.postMessage({ type: "LOGIN" });
@@ -70,6 +71,7 @@ export const useAuthStore = create((set, get) => {
           isLoading: false,
           error: null,
         });
+        resetSessionExpiredGuard();
         return { success: true, user: userData };
       } catch (err) {
         const message = errorMessage(err, "Registration failed.");
@@ -133,6 +135,7 @@ export const useAuthStore = create((set, get) => {
           isLoading: false,
           error: null,
         });
+        resetSessionExpiredGuard();
         return { success: true, user: userData };
       } catch (err) {
         const message = errorMessage(err, "Failed to load your account.");

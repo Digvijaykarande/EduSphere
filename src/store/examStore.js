@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { getStoredAccessToken } from "@/lib/api";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api`
@@ -16,7 +17,11 @@ async function apiGet(path, params) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
     });
   }
-  const res = await fetch(url.toString(), { credentials: "include" });
+  const accessToken = getStoredAccessToken();
+  const res = await fetch(url.toString(), {
+    credentials: "include",
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  });
   const json = await res.json();
   if (!res.ok || json.success === false) {
     throw new Error(json.message || "Request failed");
@@ -26,10 +31,14 @@ async function apiGet(path, params) {
 
 async function apiSend(method, path, body) {
   const url = `${BASE}${path}`;
+  const accessToken = getStoredAccessToken();
   const res = await fetch(url, {
     method,
     credentials: "include",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   const json = await res.json();

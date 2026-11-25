@@ -9,6 +9,94 @@ export class ApiError extends Error {
   }
 }
 
+const ACCESS_TOKEN_KEY = "edusphere_access_token";
+const REFRESH_TOKEN_KEY = "edusphere_refresh_token";
+
+let refreshInFlight = null;
+let sessionExpiredHandled = false;
+
+function canUseStorage() {
+  return typeof window !== "undefined" && !!window.localStorage;
+}
+
+export function getStoredAccessToken() {
+  if (!canUseStorage()) return null;
+  try {
+    return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredRefreshToken() {
+  if (!canUseStorage()) return null;
+  try {
+    return window.localStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function storeAuthTokens(tokens) {
+  if (!canUseStorage() || !tokens || typeof tokens !== "object") return;
+  try {
+    if (typeof tokens.accessToken === "string" && tokens.accessToken) {
+      window.localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+    }
+    if (typeof tokens.refreshToken === "string" && tokens.refreshToken) {
+      window.localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    }
+  } catch {
+    /* ignore storage failures (private mode/quota) */
+  }
+}
+
+export function clearStoredAuthTokens() {
+  if (!canUseStorage()) return;
+  try {
+    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+    window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+function persistTokensFromResponse(resJson) {
+  const data = resJson?.data;
+  if (data && (data.accessToken || data.refreshToken)) {
+    storeAuthTokens({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+    });
+  }
+}
+
+function isAuthPage() {
+  if (typeof window === "undefined") return true;
+  const p = window.location.pathname;
+  return (
+    p === "/login" ||
+    p === "/register" ||
+    p.startsWith("/reset-password") ||
+    p.startsWith("/forgot-password") ||
+    p.startsWith("/verify-email")
+  );
+}
+
+function handleSessionExpired() {
+  clearStoredAuthTokens();
+  if (typeof window === "undefined" || sessionExpiredHandled || isAuthPage()) {
+    return;
+  }
+  sessionExpiredHandled = true;
+  const from = `${window.location.pathname}${window.location.search}`;
+  window.location.assign(`/login?from=${encodeURIComponent(from)}`);
+}
+
+export function resetSessionExpiredGuard() {
+  sessionExpiredHandled = false;
+}
+
 async function request(
   endpoint,
   { method = "GET", body, headers = {}, query } = {},
@@ -24,12 +112,14 @@ async function request(
     if (qs) url += `?${qs}`;
   }
 
+  const accessToken = getStoredAccessToken();
   const config = {
     method,
     credentials: "include", // send/receive httpOnly cookies
     headers: {
       Accept: "application/json",
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...headers,
     },
   };
@@ -60,8 +150,25 @@ async function request(
   if (!response.ok) {
     if (response.status === 401 && !endpoint.startsWith("/api/auth/")) {
       try {
-        await api.refresh();
-        const retryRes = await fetch(url, config);
+        if (!refreshInFlight) {
+          refreshInFlight = api.refresh().finally(() => {
+            refreshInFlight = null;
+          });
+        }
+        await refreshInFlight;
+
+        const retryAccessToken = getStoredAccessToken();
+        const retryConfig = {
+          ...config,
+          headers: {
+            ...config.headers,
+            ...(retryAccessToken
+              ? { Authorization: `Bearer ${retryAccessToken}` }
+              : {}),
+          },
+        };
+
+        const retryRes = await fetch(url, retryConfig);
         const retryText = await retryRes.text();
         let retryJson = null;
         if (retryText) {
@@ -72,12 +179,13 @@ async function request(
           }
         }
         if (retryRes.ok) {
+          persistTokensFromResponse(retryJson);
           return retryJson;
         }
         resJson = retryJson;
         response = retryRes;
       } catch {
-        // Refresh attempt failed; fall through to standard ApiError throw
+        handleSessionExpired();
       }
     }
 
@@ -87,6 +195,7 @@ async function request(
     throw new ApiError(message, response.status, resJson);
   }
 
+  persistTokensFromResponse(resJson);
   return resJson;
 }
 
@@ -105,12 +214,16 @@ async function uploadRequest(endpoint, files, { query } = {}) {
   const formData = new FormData();
   for (const file of files) formData.append("files", file);
 
+  const accessToken = getStoredAccessToken();
   let response;
   try {
     response = await fetch(url, {
       method: "POST",
       credentials: "include",
-      headers: { Accept: "application/json" }, // no Content-Type — browser sets multipart boundary
+      headers: {
+        Accept: "application/json", // no Content-Type — browser sets multipart boundary
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
       body: formData,
     });
   } catch {
@@ -150,8 +263,24 @@ export const api = {
   login: (payload) =>
     request("/api/auth/login", { method: "POST", body: payload }),
   me: () => request("/api/auth/me"),
-  refresh: () => request("/api/auth/refresh", { method: "POST" }),
-  logout: () => request("/api/auth/logout", { method: "POST" }),
+  refresh: () => {
+    const refreshToken = getStoredRefreshToken();
+    return request("/api/auth/refresh", {
+      method: "POST",
+      ...(refreshToken ? { body: { refreshToken } } : {}),
+    });
+  },
+  logout: async () => {
+    const refreshToken = getStoredRefreshToken();
+    try {
+      return await request("/api/auth/logout", {
+        method: "POST",
+        ...(refreshToken ? { body: { refreshToken } } : {}),
+      });
+    } finally {
+      clearStoredAuthTokens();
+    }
+  },
   forgotPassword: (payload) =>
     request("/api/auth/forgot-password", { method: "POST", body: payload }),
   resetPassword: (payload) =>
