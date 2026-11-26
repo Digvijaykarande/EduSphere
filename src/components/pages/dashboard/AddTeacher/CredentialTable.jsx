@@ -27,6 +27,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { api, ApiError } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import Pagination from "./Pagination";
 import { STAFF_TYPE_OPTIONS } from "./constants";
@@ -108,7 +109,10 @@ function CopyButton({ value, id, copiedId, onCopy, label = "Copy to clipboard" }
 }
 
 export default function CredentialTable({ refreshTrigger }) {
+  const userRole = useAuthStore((s) => s.user?.role);
+  const isTeacher = userRole?.toUpperCase() === "TEACHER";
   const [activeTab, setActiveTab] = useState("teachers");
+  const effectiveTab = isTeacher ? "students" : activeTab;
   const [teachers, setTeachers] = useState({ items: [], total: 0 });
   const [students, setStudents] = useState({ items: [], total: 0 });
   const [staff, setStaff] = useState({ items: [], total: 0 });
@@ -124,22 +128,28 @@ export default function CredentialTable({ refreshTrigger }) {
   const fetchAccounts = async () => {
     setLoading(true);
     try {
-      const [tRes, sRes, stRes] = await Promise.allSettled([
-        api.getTeachers({ search, page, limit: PAGE_SIZE }),
-        api.getStudents({ search, page, limit: PAGE_SIZE }),
-        api.getStaff({ search, page, limit: PAGE_SIZE }),
-      ]);
-      if (tRes.status === "fulfilled") {
-        const data = tRes.value?.data || {};
-        setTeachers({ items: data.items || [], total: data.total || 0 });
-      }
-      if (sRes.status === "fulfilled") {
-        const data = sRes.value?.data || {};
+      if (isTeacher) {
+        const sRes = await api.getStudents({ search, page, limit: PAGE_SIZE });
+        const data = sRes?.data || {};
         setStudents({ items: data.items || [], total: data.total || 0 });
-      }
-      if (stRes.status === "fulfilled") {
-        const data = stRes.value?.data || {};
-        setStaff({ items: data.items || [], total: data.total || 0 });
+      } else {
+        const [tRes, sRes, stRes] = await Promise.allSettled([
+          api.getTeachers({ search, page, limit: PAGE_SIZE }),
+          api.getStudents({ search, page, limit: PAGE_SIZE }),
+          api.getStaff({ search, page, limit: PAGE_SIZE }),
+        ]);
+        if (tRes.status === "fulfilled") {
+          const data = tRes.value?.data || {};
+          setTeachers({ items: data.items || [], total: data.total || 0 });
+        }
+        if (sRes.status === "fulfilled") {
+          const data = sRes.value?.data || {};
+          setStudents({ items: data.items || [], total: data.total || 0 });
+        }
+        if (stRes.status === "fulfilled") {
+          const data = stRes.value?.data || {};
+          setStaff({ items: data.items || [], total: data.total || 0 });
+        }
       }
     } catch {
       /* ignore */
@@ -200,8 +210,8 @@ export default function CredentialTable({ refreshTrigger }) {
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      const isTeacherTab = activeTab === "teachers";
-      const isStaffTab = activeTab === "staff";
+      const isTeacherTab = effectiveTab === "teachers";
+      const isStaffTab = effectiveTab === "staff";
       const fetcher = isTeacherTab
         ? api.getTeachers
         : isStaffTab
@@ -257,7 +267,7 @@ export default function CredentialTable({ refreshTrigger }) {
         isTeacherTab ? "Teachers" : isStaffTab ? "Staff" : "Students"
       );
 
-      const fileName = `edusphere-${activeTab}-credentials-${new Date()
+      const fileName = `edusphere-${effectiveTab}-credentials-${new Date()
         .toISOString()
         .slice(0, 10)}.xlsx`;
       XLSX.writeFile(workbook, fileName);
@@ -269,15 +279,15 @@ export default function CredentialTable({ refreshTrigger }) {
   };
 
   const activeList =
-    activeTab === "teachers"
+    effectiveTab === "teachers"
       ? teachers.items
-      : activeTab === "staff"
+      : effectiveTab === "staff"
       ? staff.items
       : students.items;
   const activeTotal =
-    activeTab === "teachers"
+    effectiveTab === "teachers"
       ? teachers.total
-      : activeTab === "staff"
+      : effectiveTab === "staff"
       ? staff.total
       : students.total;
   const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
@@ -290,18 +300,20 @@ export default function CredentialTable({ refreshTrigger }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Tabs */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-fit">
-          <button
-            type="button"
-            onClick={() => setActiveTab("teachers")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === "teachers"
-                ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            <Users size={14} />
-            Teachers ({teachers.total})
-          </button>
+          {!isTeacher && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("teachers")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "teachers"
+                  ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <Users size={14} />
+              Teachers ({teachers.total})
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setActiveTab("students")}
@@ -314,18 +326,20 @@ export default function CredentialTable({ refreshTrigger }) {
             <GraduationCap size={14} />
             Students ({students.total})
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("staff")}
-            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === "staff"
-                ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            <Briefcase size={14} />
-            Staff ({staff.total})
-          </button>
+          {!isTeacher && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("staff")}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "staff"
+                  ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <Briefcase size={14} />
+              Staff ({staff.total})
+            </button>
+          )}
         </div>
 
         {/* Action Controls */}
@@ -338,7 +352,7 @@ export default function CredentialTable({ refreshTrigger }) {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search ${activeTab}...`}
+              placeholder={`Search ${effectiveTab}...`}
               className="pl-9 h-9 text-xs rounded-xl"
             />
           </div>
@@ -387,9 +401,9 @@ export default function CredentialTable({ refreshTrigger }) {
             <p className="text-sm font-medium">No accounts yet</p>
             <p className="text-xs text-slate-500 mt-1">
               Use the form above to invite your first{" "}
-              {activeTab === "teachers"
+              {effectiveTab === "teachers"
                 ? "teacher"
-                : activeTab === "staff"
+                : effectiveTab === "staff"
                 ? "staff member"
                 : "student"}
               .
@@ -400,10 +414,10 @@ export default function CredentialTable({ refreshTrigger }) {
             <TableHeader className="bg-slate-50 dark:bg-slate-800/60">
               <TableRow>
                 <TableHead className="py-3 px-4 text-xs">
-                  {activeTab === "students" ? "Roll No" : "Employee ID"}
+                  {effectiveTab === "students" ? "Roll No" : "Employee ID"}
                 </TableHead>
                 <TableHead className="py-3 px-4 text-xs">Name</TableHead>
-                {activeTab === "staff" && (
+                {effectiveTab === "staff" && (
                   <TableHead className="py-3 px-4 text-xs hidden sm:table-cell">Role</TableHead>
                 )}
                 <TableHead className="py-3 px-4 text-xs hidden sm:table-cell">Login alias</TableHead>
@@ -420,16 +434,16 @@ export default function CredentialTable({ refreshTrigger }) {
                   row.temporaryPassword || row.tempPassword || null;
                 const isPwVisible = !!visiblePasswords[row.slug];
                 const rowRole =
-                  activeTab === "teachers"
+                  effectiveTab === "teachers"
                     ? "teacher"
-                    : activeTab === "staff"
+                    : effectiveTab === "staff"
                     ? "staff"
                     : "student";
 
                 return (
                   <TableRow key={row.slug}>
                     <TableCell className="py-3 px-4 font-mono font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                      {activeTab === "students"
+                      {effectiveTab === "students"
                         ? row.rollNumber
                         : row.employeeId}
                     </TableCell>
@@ -437,7 +451,7 @@ export default function CredentialTable({ refreshTrigger }) {
                       {row.firstName} {row.lastName}
                     </TableCell>
 
-                    {activeTab === "staff" && (
+                    {effectiveTab === "staff" && (
                       <TableCell className="py-3 px-4 hidden sm:table-cell">
                         <Badge variant="secondary" className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                           {staffRoleLabel(row)}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { UserPlus, FileSpreadsheet } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 import AccountTypeCards from "./AccountTypeCards";
 import CreateTeacherForm from "./CreateTeacherForm";
@@ -17,15 +18,19 @@ const FORM_BY_ROLE = {
 };
 
 export default function AddTeacherPage() {
+  const userRole = useAuthStore((s) => s.user?.role);
+  const isTeacher = userRole?.toUpperCase() === "TEACHER";
   const [activeMainTab, setActiveMainTab] = useState("create"); // "create" | "credentials"
   const [selectedRole, setSelectedRole] = useState("teacher"); // "teacher" | "student" | "staff"
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const effectiveRole = isTeacher ? "student" : selectedRole;
 
   const handleAccountCreated = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
 
-  const ActiveForm = FORM_BY_ROLE[selectedRole] || CreateTeacherForm;
+  const ActiveForm = FORM_BY_ROLE[effectiveRole] || CreateTeacherForm;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -73,14 +78,15 @@ export default function AddTeacherPage() {
       {activeMainTab === "create" ? (
         <div className="space-y-8">
           <AccountTypeCards
-            activeKey={selectedRole}
+            activeKey={effectiveRole}
             onSelect={setSelectedRole}
+            allowedKeys={isTeacher ? ["student"] : undefined}
           />
 
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8">
             <AnimatePresence mode="wait">
               <motion.div
-                key={selectedRole}
+                key={effectiveRole}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}

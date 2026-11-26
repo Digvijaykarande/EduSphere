@@ -1,29 +1,14 @@
 "use client";
 
 import { create } from "zustand";
-import { api, getStoredAccessToken } from "@/lib/api";
-
-const BASE = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
-  : "/api";
+import { api, request } from "@/lib/api";
 
 async function apiGet(path, params) {
-  const url = new URL(`${BASE}${path}`, typeof window !== "undefined" ? window.location.origin : "http://localhost");
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
-    });
-  }
-  const accessToken = getStoredAccessToken();
-  const res = await fetch(url.toString(), {
-    credentials: "include",
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  });
-  const json = await res.json();
-  if (!res.ok || json.success === false) {
+  const json = await request(`/api${path}`, { query: params });
+  if (json?.success === false) {
     throw new Error(json.message || "Request failed");
   }
-  return json.data;
+  return json?.data;
 }
 
 export const useAttendanceStore = create((set, get) => ({

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://edusphere-backend-dnj3.onrender.com";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://edusphere-backend-dnj3.onrender.com";
 
 export class ApiError extends Error {
   constructor(message, status, data) {
@@ -97,7 +97,7 @@ export function resetSessionExpiredGuard() {
   sessionExpiredHandled = false;
 }
 
-async function request(
+export async function request(
   endpoint,
   { method = "GET", body, headers = {}, query } = {},
 ) {

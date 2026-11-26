@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useLeaveStore } from "@/store/use-leave-store";
+import { api } from "@/lib/api";
 import TeacherTakeAttendance from "./Teachertakeattendance";
 import LeaveInbox from "./Leaveinbox";
 import LeaveApplyForm from "./Leaveapplyform";
@@ -39,9 +40,8 @@ export default function TeacherAttendancePage() {
   useEffect(() => {
     if (!user || tab !== "View Attendance") return;
     setIsLoadingMySections(true);
-    const base = process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : "/api";
-    fetch(`${base}/teacher/my-assignments`, { credentials: "include" })
-      .then((r) => r.json())
+    api
+      .getMyAssignments()
       .then((json) => {
         const assignments = json?.data?.assignments || [];
         // One TeacherAssignment row per (teacher, section); dedupe by
@@ -61,6 +61,7 @@ export default function TeacherAttendancePage() {
         }
         setMySections(Array.from(seen.values()));
       })
+      .catch(() => setMySections([]))
       .finally(() => setIsLoadingMySections(false));
   }, [user, tab]);
 

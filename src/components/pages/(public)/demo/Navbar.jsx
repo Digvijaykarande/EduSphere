@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 
 const AUTH_ME_ENDPOINT =
   (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) ||
-  "http://localhost:5000";
+  "https://edusphere-backend-dnj3.onrender.com";
 
 export default function Navbar() {
   const pathname = usePathname();

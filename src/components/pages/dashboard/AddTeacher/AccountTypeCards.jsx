@@ -21,10 +21,14 @@ const DESCRIPTION_BY_KEY = {
  * @param {"teacher"|"student"|"staff"} activeKey
  * @param {(key: string) => void} onSelect
  */
-export default function AccountTypeCards({ activeKey, onSelect }) {
+export default function AccountTypeCards({ activeKey, onSelect, allowedKeys }) {
+  const items = allowedKeys
+    ? ACCOUNT_TYPES.filter(({ key }) => allowedKeys.includes(key))
+    : ACCOUNT_TYPES;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {ACCOUNT_TYPES.map(({ key, label }) => {
+    <div className={`grid grid-cols-1 ${items.length > 1 ? "sm:grid-cols-3" : "sm:grid-cols-1 max-w-sm"} gap-4`}>
+      {items.map(({ key, label }) => {
         const Icon = ICON_BY_KEY[key] || Users;
         const active = activeKey === key;
 
